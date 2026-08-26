@@ -1,0 +1,65 @@
+.discovery-section{padding:34px 24px 90px;background:var(--bg)}
+.discovery-shell{max-width:1240px;margin:auto}
+.discovery-head{max-width:700px;margin:0 auto 26px;text-align:center}
+.discovery-head h2{font-size:clamp(2rem,4vw,3.1rem);letter-spacing:-.04em;margin:8px 0 12px}
+.discovery-head p{color:var(--muted);line-height:1.7;margin:0}
+
+.discovery-panel{max-width:960px;margin:0 auto;padding:26px;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:var(--shadow)}
+.discovery-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.discovery-tabs button{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);padding:11px 16px;border-radius:12px;font-weight:700;font-size:.85rem;transition:all .2s ease}
+.discovery-tabs button.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 10px 24px rgba(15,102,89,.22)}
+.discovery-tabs button:not(.active):hover{border-color:var(--primary);color:var(--text)}
+
+.discovery-search-row{display:grid;grid-template-columns:1fr 160px auto;gap:10px}
+.search-input-wrap{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:13px;background:var(--bg);padding:0 14px;min-height:50px}
+.search-input-wrap .icon{color:var(--primary);flex:0 0 auto}
+.search-input-wrap input{border:0;outline:0;background:transparent;color:var(--text);width:100%;padding:14px 0;font-size:.92rem}
+.discovery-search-row select{border:1px solid var(--border);border-radius:13px;background:var(--bg);color:var(--text);padding:0 12px;min-height:50px}
+.search-submit{border:1px solid var(--primary);border-radius:13px;padding:0 22px;font-weight:700;background:var(--primary);color:#fff;min-height:50px;transition:transform .2s ease,box-shadow .2s ease}
+.search-submit:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(15,102,89,.25)}
+
+.quick-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.quick-chips-label{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:8px 13px;border-radius:999px;font-size:.8rem;font-weight:600;transition:all .18s ease}
+.chip:hover{border-color:var(--primary);color:var(--primary)}
+.chip-active{background:var(--primary);border-color:var(--primary);color:#fff}
+.service-chips{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+
+.location-status{padding:16px;border-radius:14px;background:var(--surface-2);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.location-status p{margin:0;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.85rem;line-height:1.5}
+.location-status-ready p{color:#12703c}
+.location-status-denied p{color:#a01b1b}
+:root[data-theme="dark"] .location-status-ready p{color:#7fe0ab}
+:root[data-theme="dark"] .location-status-denied p{color:#f5978a}
+
+.discovery-results{max-width:1080px;margin:22px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.search-feedback{grid-column:1/-1;padding:16px;border-radius:14px;background:var(--surface-2);color:var(--muted);border:1px solid var(--border);text-align:center}
+
+.plumber-card{display:flex;flex-direction:column;gap:11px;padding:19px;border:1px solid var(--border);border-radius:18px;background:var(--surface);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;animation:resultIn .35s ease both}
+.plumber-card:hover{transform:translateY(-3px);border-color:rgba(15,102,89,.35);box-shadow:0 14px 32px rgba(15,102,89,.1)}
+.plumber-card-top{display:flex;gap:12px;align-items:flex-start}
+.plumber-avatar{width:46px;height:46px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;font-family:var(--font-display);font-size:1.1rem;font-weight:600}
+.plumber-card-heading{min-width:0}
+.plumber-name-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.plumber-name-row h3{margin:0;font-size:1rem}
+.verified-badge{display:inline-flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;color:#0d7041;background:#e8f8ef;padding:4px 8px;border-radius:999px}
+:root[data-theme="dark"] .verified-badge{color:#7fe0ab;background:#0e2419}
+.plumber-profession{margin:3px 0 0;color:var(--muted);font-size:.8rem}
+.plumber-location{display:flex;align-items:center;gap:6px;margin:0;color:var(--muted);font-size:.8rem}
+.plumber-location .icon{color:var(--accent);flex:0 0 auto}
+.plumber-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.plumber-meta .tag{font-size:.72rem;font-weight:600;color:var(--muted);background:var(--surface-2);padding:4px 9px;border-radius:999px}
+.plumber-cta{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--primary);color:#fff;text-decoration:none;border-radius:11px;padding:11px 15px;font-weight:700;font-size:.85rem;transition:transform .2s ease}
+.plumber-cta:hover{transform:translateY(-1px)}
+
+.discovery-skeletons .plumber-skeleton{gap:10px}
+.plumber-skeleton span{display:block;border-radius:8px;background:linear-gradient(90deg,var(--surface-2) 25%,var(--border) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.4s ease infinite}
+.plumber-skeleton span:nth-child(1){height:46px;width:46px;border-radius:14px}
+.plumber-skeleton span:nth-child(2){height:14px;width:70%}
+.plumber-skeleton span:nth-child(3){height:38px;width:100%;margin-top:auto}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes resultIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+@media(max-width:900px){.discovery-results{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.discovery-search-row{grid-template-columns:1fr}.discovery-panel{padding:20px}}
+@media(max-width:560px){.discovery-section{padding:20px 14px 60px}.discovery-results{grid-template-columns:1fr}.discovery-tabs{flex-direction:column}.discovery-tabs button{width:100%;justify-content:center}}

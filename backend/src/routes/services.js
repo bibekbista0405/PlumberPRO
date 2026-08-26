@@ -1,0 +1,10 @@
+const express = require('express');
+const { listServices, listAllServices, createService, updateService, deleteService } = require('../controllers/services');
+const { authenticate, authorize } = require('../middleware/auth');
+const router = express.Router();
+router.get('/', listServices);
+router.get('/admin/all', authenticate, authorize('admin'), listAllServices);
+router.post('/', authenticate, authorize('admin'), createService);
+router.patch('/:id', authenticate, authorize('admin'), updateService);
+router.delete('/:id', authenticate, authorize('admin'), deleteService);
+module.exports = router;
