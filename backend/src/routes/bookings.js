@@ -1,0 +1,16 @@
+const express = require('express');
+const { authenticate, authorize } = require('../middleware/auth');
+const { bookingPhotoUpload } = require('../middleware/upload');
+const { createBooking, myBookings, getBooking, cancelBooking, adminBookings, updateBooking, plumberBookings, plumberUpdateBooking, uploadBookingPhoto, uploadCompletionPhoto } = require('../controllers/bookings');
+const router = express.Router();
+router.post('/', authenticate, authorize('customer'), createBooking);
+router.get('/my', authenticate, authorize('customer'), myBookings);
+router.get('/plumber', authenticate, authorize('plumber'), plumberBookings);
+router.get('/admin/all', authenticate, authorize('admin'), adminBookings);
+router.get('/:id', authenticate, getBooking);
+router.patch('/:id/cancel', authenticate, authorize('customer'), cancelBooking);
+router.patch('/:id/admin', authenticate, authorize('admin'), updateBooking);
+router.patch('/:id/plumber', authenticate, authorize('plumber'), plumberUpdateBooking);
+router.post('/:id/photo', authenticate, authorize('customer'), bookingPhotoUpload.single('photo'), uploadBookingPhoto);
+router.post('/:id/completion-photo', authenticate, authorize('plumber'), bookingPhotoUpload.single('photo'), uploadCompletionPhoto);
+module.exports = router;

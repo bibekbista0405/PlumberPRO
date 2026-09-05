@@ -1,0 +1,18 @@
+const express = require('express');
+const { authenticate, authorize } = require('../middleware/auth');
+const { stats, users, plumbers, createPlumber, setUserStatus, verifyPlumber, analytics } = require('../controllers/admin');
+const { listMessages, updateMessage } = require('../controllers/contact');
+const { listReviews } = require('../controllers/reviews');
+const router = express.Router();
+router.use(authenticate, authorize('admin'));
+router.get('/stats', stats);
+router.get('/analytics', analytics);
+router.get('/users', users);
+router.get('/plumbers', plumbers);
+router.post('/plumbers', createPlumber);
+router.patch('/users/:id/status', setUserStatus);
+router.patch('/plumbers/:id/verification', verifyPlumber);
+router.get('/messages', listMessages);
+router.patch('/messages/:id', updateMessage);
+router.get('/reviews', listReviews);
+module.exports = router;

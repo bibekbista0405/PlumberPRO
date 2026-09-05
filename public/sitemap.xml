@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Replace https://www.plumbpro.com.np below with your real production domain once you deploy. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.plumbpro.com.np/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.plumbpro.com.np/services</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.plumbpro.com.np/about</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.plumbpro.com.np/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.plumbpro.com.np/blog/signs-you-need-a-plumber-right-away</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.plumbpro.com.np/blog/stop-a-leaking-pipe-before-the-plumber-arrives</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.plumbpro.com.np/blog/water-tank-maintenance-seasonal-checklist</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.plumbpro.com.np/blog/why-water-pressure-drops</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.plumbpro.com.np/blog/what-plumber-verification-actually-means</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.plumbpro.com.np/blog/monsoon-proofing-your-homes-plumbing-in-nepal</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.plumbpro.com.np/blog/plumbing-questions-nepal-faq</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.plumbpro.com.np/book-plumber</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.plumbpro.com.np/contact</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://www.plumbpro.com.np/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.plumbpro.com.np/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.plumbpro.com.np/legal</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.plumbpro.com.np/cancellation-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>

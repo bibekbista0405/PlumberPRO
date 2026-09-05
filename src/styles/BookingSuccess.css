@@ -1,0 +1,20 @@
+.booking-success-backdrop{position:fixed;inset:0;background:rgba(4,14,13,.62);backdrop-filter:blur(8px);display:grid;place-items:center;padding:20px;z-index:2100;animation:fadeIn .2s ease both}
+.booking-success-card{position:relative;width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:34px 30px 30px;box-shadow:var(--shadow-lg);text-align:center;animation:successPop .35s cubic-bezier(.2,.9,.3,1.2) both}
+.booking-success-dismiss{position:absolute;right:14px;top:14px;border:0;background:var(--surface-2);color:var(--muted);width:30px;height:30px;border-radius:9px;display:grid;place-items:center}
+.booking-success-dismiss:hover{color:var(--text)}
+.booking-success-badge{position:relative;width:64px;height:64px;margin:0 auto 16px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center}
+.booking-success-ring{position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--primary);opacity:.4;animation:successRing 1.6s ease-out infinite}
+.booking-success-card .eyebrow{justify-content:center;width:100%;margin-bottom:10px}
+.booking-success-card h2{font-size:1.4rem;letter-spacing:-.03em;margin:0 0 10px}
+.booking-success-card > p{color:var(--muted);line-height:1.6;margin:0 0 24px;font-size:.9rem}
+.booking-success-steps{list-style:none;margin:0 0 26px;padding:0;display:grid;gap:14px;text-align:left}
+.booking-success-steps li{display:flex;gap:12px;align-items:flex-start}
+.booking-success-steps span{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:var(--surface-2);color:var(--primary);font-family:var(--font-mono);font-size:.72rem;font-weight:700;display:grid;place-items:center;margin-top:1px}
+.booking-success-steps strong{display:block;font-size:.86rem}
+.booking-success-steps small{display:block;color:var(--muted);font-size:.76rem;margin-top:2px;line-height:1.4}
+.booking-success-actions{display:flex;flex-direction:column;gap:10px}
+.booking-success-secondary{background:var(--surface-2);color:var(--text);border-color:var(--border);box-shadow:none!important;justify-content:center}
+.booking-success-actions .btn-primary{justify-content:center;box-shadow:0 12px 26px rgba(15,102,89,.22)}
+@keyframes successPop{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:none}}
+@keyframes successRing{from{opacity:.5;transform:scale(1)}to{opacity:0;transform:scale(1.35)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}

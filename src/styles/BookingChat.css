@@ -1,0 +1,17 @@
+.booking-chat{border:1px solid var(--border);border-radius:16px;background:var(--surface-2);display:flex;flex-direction:column;height:340px;overflow:hidden}
+.chat-locked{padding:16px;border:1px dashed var(--border);border-radius:14px;color:var(--muted);font-size:.84rem;display:flex;align-items:center;gap:8px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.chat-empty{color:var(--muted);font-size:.84rem;text-align:center;margin:auto}
+.chat-bubble{max-width:78%;padding:9px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--border);align-self:flex-start}
+.chat-bubble.mine{align-self:flex-end;background:var(--primary);color:#fff;border-color:var(--primary)}
+.chat-sender{display:block;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.7;margin-bottom:3px}
+.chat-bubble p{margin:0;font-size:.86rem;line-height:1.5;word-break:break-word}
+.chat-bubble small{display:block;margin-top:4px;font-size:.65rem;opacity:.65;font-family:var(--font-mono)}
+.chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--surface)}
+.chat-input-row input{flex:1;border:1px solid var(--border);border-radius:11px;padding:10px 12px;background:var(--bg);color:var(--text);font-size:.86rem}
+.chat-input-row button{width:40px;flex:0 0 auto;border:0;border-radius:11px;background:var(--primary);color:#fff;display:grid;place-items:center}
+.chat-input-row button:disabled{opacity:.5}
+@media(max-width:600px){.booking-chat{height:300px}}
+.booking-chat-tall{flex:1;height:auto;min-height:0;border:0;border-radius:0;background:transparent}
+.booking-chat-tall .chat-messages{padding:18px 20px}
+.booking-chat-tall .chat-input-row{padding:14px 18px;background:var(--surface)}

@@ -1,0 +1,6 @@
+<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PlumbPro">
+  <rect width="40" height="40" rx="11" fill="#0f6659"/>
+  <path d="M12 28 V15.5 a5.5 5.5 0 0 1 5.5 -5.5 H24" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 10 V19 a4 4 0 0 1 -4 4 H16" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+  <circle cx="27.5" cy="26.5" r="3.4" fill="#e2a06c"/>
+</svg>

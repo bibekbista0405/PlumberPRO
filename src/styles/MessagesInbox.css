@@ -1,0 +1,42 @@
+/* Messages now fills the entire content area below the dashboard topbar
+   instead of sitting in a small bordered card — see .dash-shell-full on the
+   page wrapper, which removes the shell's max-width/padding and lets this
+   flex to the full remaining height. */
+.messages-inbox{display:flex;flex:1;min-height:0;background:var(--surface)}
+.inbox-list-pane{width:340px;flex:0 0 340px;border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:0;background:var(--surface)}
+.inbox-list-head{padding:20px 20px 14px;border-bottom:1px solid var(--border)}
+.inbox-list-head h2{margin:0 0 14px;font-size:1.2rem;display:flex;align-items:center;gap:8px}
+.inbox-list-head h2 em{background:var(--primary);color:#fff;border-radius:999px;padding:2px 8px;font-size:.68rem;font-style:normal;font-weight:800}
+.inbox-search{display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--border);border-radius:11px;background:var(--bg)}
+.inbox-search input{border:0;outline:0;background:transparent;color:var(--text);padding:11px 0;width:100%;font-size:.86rem}
+.inbox-list{flex:1;overflow-y:auto}
+.inbox-row{display:flex;gap:11px;width:100%;text-align:left;border:0;background:transparent;padding:15px 20px;border-bottom:1px solid var(--border);cursor:pointer}
+.inbox-row:hover{background:var(--surface-2)}
+.inbox-row.active{background:var(--surface-2);box-shadow:inset 3px 0 var(--primary)}
+.inbox-avatar{width:40px;height:40px;flex:0 0 auto;border-radius:12px;background:var(--surface-2);color:var(--primary);display:grid;place-items:center;font-weight:800;font-size:1rem}
+.inbox-row .inbox-avatar{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff}
+.inbox-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.inbox-row-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.inbox-row-top strong{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inbox-row-top small{color:var(--muted);font-size:.68rem;flex:0 0 auto}
+.inbox-row-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.inbox-preview{color:var(--muted);font-size:.79rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inbox-row-bottom em{flex:0 0 auto;background:var(--primary);color:#fff;border-radius:999px;padding:1px 7px;font-size:.65rem;font-style:normal;font-weight:800}
+.inbox-row .status{align-self:flex-start;margin-top:2px}
+.inbox-empty{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);padding:50px 24px}
+.inbox-chat-pane{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
+.inbox-chat-head{display:flex;align-items:center;gap:11px;padding:16px 22px;border-bottom:1px solid var(--border);background:var(--surface)}
+.inbox-chat-head div{flex:1;min-width:0}
+.inbox-chat-head strong{display:block;font-size:.95rem}
+.inbox-chat-head small{display:block;color:var(--muted);font-size:.73rem;margin-top:2px}
+.inbox-back-btn{display:none;border:0;background:var(--surface-2);color:var(--text);width:34px;height:34px;border-radius:10px;flex:0 0 auto;align-items:center;justify-content:center}
+.inbox-chat-placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted)}
+
+@media(max-width:860px){
+  /* Phone-style navigation: show the list OR the open thread, never both,
+     and give the open thread a back button to return to the list. */
+  .inbox-back-btn{display:flex}
+  .inbox-list-pane{width:100%;flex:1 1 auto;border-right:0}
+  .messages-inbox.has-active .inbox-list-pane{display:none}
+  .messages-inbox:not(.has-active) .inbox-chat-pane{display:none}
+}
