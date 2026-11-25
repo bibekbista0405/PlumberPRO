@@ -1,0 +1,5 @@
+import React from 'react';
+import '../styles/WhyChooseUs.css';
+const items=[['01','Verified network','Only plumbers verified by the PlumbPro platform appear as verified in local search.'],['02','Location aware','Use your current location or search by area to find professionals who can reach you.'],['03','Transparent progress','Follow each booking through clear stages from request to completion.'],['04','One simple workspace','Customers, plumbers and our team each get focused tools for the work they actually need to do.']];
+function WhyChooseUs(){return <section className="why-section" data-reveal><div className="why-heading"><span className="eyebrow">BUILT FOR REAL WORK</span><h2>A better way to coordinate plumbing service.</h2><p>PlumbPro keeps the experience practical: real profiles, real bookings and clear actions at every step.</p></div><div className="why-grid">{items.map(([n,t,d])=><article className="why-card" key={n}><span className="why-number">{n}</span><h3>{t}</h3><p>{d}</p></article>)}</div></section>}
+export default WhyChooseUs;

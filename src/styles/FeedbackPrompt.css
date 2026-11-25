@@ -1,0 +1,137 @@
+.feedback-prompt {
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-2);
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Entrance/exit: a small settle-in on first mount, and a quick fade-collapse
+   when dismissed or after submitting — the JS delays the actual unmount to
+   let this play out instead of the card just vanishing mid-frame. */
+.feedback-prompt.is-entering { animation: feedbackIn .32s cubic-bezier(.2, .8, .3, 1) both; }
+.feedback-prompt.is-closing { animation: feedbackOut .26s ease both; }
+@keyframes feedbackIn {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes feedbackOut {
+  from { opacity: 1; transform: none; max-height: 200px; margin-bottom: 22px; }
+  to { opacity: 0; transform: translateY(-6px) scale(.98); max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
+}
+
+.feedback-prompt-copy { flex: 1; min-width: 220px; }
+.feedback-prompt-copy strong { display: block; font-size: .92rem; margin-bottom: 3px; }
+.feedback-prompt-copy span { display: block; color: var(--muted); font-size: .82rem; line-height: 1.5; }
+
+.feedback-prompt-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.feedback-dismiss { background: transparent; border: 0; color: var(--muted); padding: 6px; border-radius: 8px; transition: background .15s ease, color .15s ease; }
+.feedback-dismiss:hover { background: var(--surface); color: var(--text); }
+
+.feedback-prompt-form { width: 100%; display: flex; flex-direction: column; gap: 12px; animation: feedbackFormIn .22s ease both; }
+@keyframes feedbackFormIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* Stars: hover previews the rating, clicking commits it with a small pop +
+   glow so picking a rating feels responsive rather than just a color swap. */
+.feedback-stars { display: flex; gap: 4px; }
+.feedback-stars button {
+  background: transparent;
+  border: 0;
+  color: var(--border);
+  padding: 3px;
+  border-radius: 8px;
+  transition: color .15s ease, transform .15s ease, filter .15s ease;
+}
+.feedback-stars button:hover,
+.feedback-stars button.on {
+  color: var(--accent);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.feedback-stars button.just-picked { animation: starPop .32s cubic-bezier(.34, 1.56, .64, 1) both; }
+@keyframes starPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.feedback-prompt-form textarea {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: .86rem;
+  resize: vertical;
+}
+
+/* "Thank you" state: a check badge with a brief tasteful burst of dots
+   rather than a static line of text — small and quick, not a fireworks show. */
+.feedback-prompt-done {
+  background: #e5f5ec;
+  color: #12703c;
+  border-color: #bfe2cd;
+  gap: 12px;
+}
+:root[data-theme="dark"] .feedback-prompt-done { background: #0e2419; color: #7fe0ab; border-color: #1c332e; }
+
+.feedback-done-badge {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  display: grid;
+  place-items: center;
+  animation: doneBadgeIn .4s cubic-bezier(.34, 1.56, .64, 1) both;
+}
+@keyframes doneBadgeIn {
+  from { opacity: 0; transform: scale(.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.feedback-done-burst { position: absolute; inset: 0; }
+.burst-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  animation: burstOut .55s ease-out .05s both;
+}
+.burst-dot-0 { --bx: 0px; --by: -22px; }
+.burst-dot-1 { --bx: 19px; --by: -11px; }
+.burst-dot-2 { --bx: 19px; --by: 11px; }
+.burst-dot-3 { --bx: 0px; --by: 22px; }
+.burst-dot-4 { --bx: -19px; --by: 11px; }
+.burst-dot-5 { --bx: -19px; --by: -11px; }
+@keyframes burstOut {
+  0% { opacity: 1; transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--bx), var(--by)) scale(.4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback-prompt.is-entering,
+  .feedback-prompt.is-closing,
+  .feedback-prompt-form,
+  .feedback-stars button.just-picked,
+  .feedback-done-badge,
+  .burst-dot {
+    animation: none !important;
+  }
+  .feedback-prompt.is-closing { display: none; }
+}
+
+@media (max-width: 560px) {
+  .feedback-prompt { flex-direction: column; align-items: stretch; }
+  .feedback-prompt-actions { width: 100%; }
+  .feedback-prompt-actions .btn-primary { flex: 1; justify-content: center; }
+}

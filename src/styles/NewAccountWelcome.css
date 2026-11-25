@@ -1,0 +1,11 @@
+.new-account-welcome{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:18px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;margin-bottom:26px;animation:welcomeCardIn .4s ease both;flex-wrap:wrap}
+.new-account-icon{flex:0 0 auto;width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.16);display:grid;place-items:center}
+.new-account-copy{flex:1;min-width:220px;display:flex;flex-direction:column;gap:3px}
+.new-account-copy strong{font-family:var(--font-display);font-size:1rem}
+.new-account-copy span{font-size:.85rem;opacity:.92;line-height:1.5}
+.new-account-actions{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.new-account-cta{background:#fff;color:var(--primary-2);text-decoration:none;font-weight:700;font-size:.84rem;padding:10px 16px;border-radius:11px;white-space:nowrap}
+.new-account-actions button{background:transparent;border:0;color:#fff;opacity:.8;padding:6px;display:grid;place-items:center;border-radius:8px}
+.new-account-actions button:hover{opacity:1;background:rgba(255,255,255,.14)}
+@keyframes welcomeCardIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media(max-width:600px){.new-account-welcome{flex-direction:column;align-items:flex-start}.new-account-actions{width:100%;justify-content:space-between}.new-account-cta{flex:1;text-align:center}}

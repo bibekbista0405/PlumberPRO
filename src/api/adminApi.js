@@ -1,0 +1,11 @@
+import { apiRequest } from './apiClient';
+export const getAdminStats = () => apiRequest('/admin/stats');
+export const getUsers = () => apiRequest('/admin/users');
+export const getPlumbers = () => apiRequest('/admin/plumbers');
+export const createPlumber = (payload) => apiRequest('/admin/plumbers', { method: 'POST', body: JSON.stringify(payload) });
+export const setUserStatus = (id, status) => apiRequest(`/admin/users/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const verifyPlumber = (id, verified) => apiRequest(`/admin/plumbers/${id}/verification`, { method: 'PATCH', body: JSON.stringify({ verified }) });
+export const getMessages = () => apiRequest('/admin/messages');
+export const updateMessage = (id, status) => apiRequest(`/admin/messages/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const getReviews = () => apiRequest('/admin/reviews');
+export const getAnalytics = (days = 30) => apiRequest(`/admin/analytics?days=${days}`);

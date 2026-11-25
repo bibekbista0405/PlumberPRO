@@ -1,0 +1,115 @@
+.testimonials-section {
+  padding: 90px 24px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.testimonials-heading {
+  max-width: 1240px;
+  margin: auto;
+}
+.testimonials-heading h2 {
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  letter-spacing: -.045em;
+  margin: 9px 0 10px;
+}
+.testimonials-heading p {
+  color: var(--muted);
+  max-width: 650px;
+  line-height: 1.7;
+}
+
+.testimonial-grid {
+  max-width: 1240px;
+  margin: 32px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.testimonial-loading {
+  color: var(--muted);
+  grid-column: 1 / -1;
+}
+
+.testimonial-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 23px 22px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 10px 35px rgba(13, 33, 31, .05);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.testimonial-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 42px rgba(13, 33, 31, .08);
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
+}
+
+/* Per-card scroll-reveal: hidden + offset until the JS observer in
+   Testimonials.jsx adds .is-visible, then eases in with a slight stagger
+   per card so they don't all pop in at once. */
+.reveal-card {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+.reveal-card.is-visible { opacity: 1; transform: none; }
+.reveal-card-0 { transition-delay: 0s; }
+.reveal-card-1 { transition-delay: .06s; }
+.reveal-card-2 { transition-delay: .12s; }
+.reveal-card-3 { transition-delay: .18s; }
+.reveal-card-4 { transition-delay: .24s; }
+.reveal-card-5 { transition-delay: .3s; }
+
+.testimonial-quote-mark {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: var(--border);
+}
+
+.testimonial-card .rating {
+  display: flex;
+  gap: 2px;
+  color: var(--border);
+  margin-bottom: 14px;
+}
+.testimonial-card .rating .star-on { color: var(--accent); }
+
+.testimonial-card .review {
+  color: var(--text);
+  opacity: .88;
+  line-height: 1.7;
+  font-size: .96rem;
+  margin: 0 0 18px;
+  flex: 1;
+}
+
+.testimonial-attribution {
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.testimonial-card h4 {
+  margin: 0 0 3px;
+  font-size: .94rem;
+  color: var(--text);
+}
+.testimonial-card > .testimonial-attribution > span {
+  font-size: .74rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-card { opacity: 1; transform: none; transition: none; }
+}
+
+@media (max-width: 800px) {
+  .testimonial-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .testimonials-section { padding: 70px 16px; }
+  .testimonial-grid { grid-template-columns: 1fr; }
+}

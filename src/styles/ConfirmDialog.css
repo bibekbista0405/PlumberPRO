@@ -1,0 +1,15 @@
+.confirm-backdrop{position:fixed;inset:0;background:rgba(4,14,13,.6);backdrop-filter:blur(8px);display:grid;place-items:center;padding:20px;z-index:2000;animation:fadeIn .18s ease both}
+.confirm-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px;box-shadow:var(--shadow-lg);text-align:center;animation:confirmPop .2s ease both}
+.confirm-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;margin:0 auto 14px;background:var(--surface-2);color:var(--primary)}
+.confirm-icon.danger{background:#fdf0ee;color:#a03421}
+:root[data-theme="dark"] .confirm-icon.danger{background:#241211;color:#f4a48f}
+.confirm-card h3{margin:0 0 8px;font-size:1.05rem}
+.confirm-card p{margin:0 0 20px;color:var(--muted);font-size:.88rem;line-height:1.55}
+.confirm-actions{display:flex;gap:10px}
+.confirm-actions button{flex:1;padding:11px;border-radius:11px;font-weight:700;font-size:.86rem;border:1px solid var(--border)}
+.confirm-cancel{background:var(--surface);color:var(--text)}
+.confirm-cancel:hover{border-color:var(--muted)}
+.confirm-ok{background:var(--primary);border-color:var(--primary);color:#fff}
+.confirm-ok.danger{background:#c23c26;border-color:#c23c26}
+@keyframes confirmPop{from{opacity:0;transform:scale(.94) translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}

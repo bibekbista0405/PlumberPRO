@@ -1,0 +1,8 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /customer-dashboard
+Disallow: /plumber-dashboard
+Disallow: /admin-dashboard
+
+Sitemap: /sitemap.xml

@@ -1,0 +1,25 @@
+.verify-panel{padding:22px;border:1px solid var(--border);border-radius:18px;background:var(--surface);margin-bottom:22px}
+.verify-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+.verify-panel-head strong{display:block;font-size:.98rem;margin-bottom:4px}
+.verify-panel-head span{display:block;color:var(--muted);font-size:.83rem;line-height:1.5;max-width:44ch}
+.verify-ring{--pct:0%;flex:0 0 auto;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--primary) var(--pct),var(--surface-2) 0);position:relative}
+.verify-ring-0{--pct:0%}
+.verify-ring-1{--pct:16.6667%}
+.verify-ring-2{--pct:33.3333%}
+.verify-ring-3{--pct:50%}
+.verify-ring-4{--pct:66.6667%}
+.verify-ring-5{--pct:83.3333%}
+.verify-ring-6{--pct:100%}
+.verify-ring::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--surface)}
+.verify-ring b{position:relative;font-family:var(--font-mono);font-size:.72rem;font-weight:700}
+.verify-checklist{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.verify-checklist li{display:flex;align-items:center;gap:10px;font-size:.86rem;color:var(--muted)}
+.verify-checklist li.done{color:var(--text)}
+.verify-checklist .check-dot{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;flex:0 0 auto;color:#fff}
+.verify-checklist li.done .check-dot{background:var(--primary);border-color:var(--primary)}
+.verify-footnote{margin:16px 0 0;font-size:.76rem;color:var(--muted);border-top:1px solid var(--border);padding-top:14px}
+.verify-panel-done{display:flex;align-items:center;gap:14px}
+.verify-panel-icon{width:42px;height:42px;border-radius:12px;background:var(--surface-2);color:var(--primary);display:grid;place-items:center;flex:0 0 auto}
+.verify-panel-done strong{display:block;margin-bottom:3px}
+.verify-panel-done span{color:var(--muted);font-size:.85rem;line-height:1.5}
+@media(max-width:600px){.verify-panel-head{flex-direction:column}.verify-ring{align-self:flex-start}}
