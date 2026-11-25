@@ -37,5 +37,5 @@ The Aiven host, port, database, username and CA file path are already prefilled 
 - `FRONTEND_URL` is the allowed browser origin for CORS. Set it to the exact frontend domain. For more than one allowed domain, separate them with commas.
 - `PGPOOL_MAX=3` is a conservative starting point for serverless deployment. Confirm the Aiven plan's connection limit before increasing it.
 - `PGSSL_CA_FILE=./certs/aiven-ca.pem` expects the CA certificate file to be present in the deployed backend package at `backend/certs/aiven-ca.pem`.
-- The environment file only configures secrets and connection settings. It does not, by itself, make a traditional Express server compatible with Vercel Functions. The backend still needs a Vercel serverless entry point/routing configuration and a deployment test before production use.
+- The backend Express app is exported from `backend/src/server.js` for Vercel's Express runtime. Set the backend Vercel project's Root Directory to `backend`; Vercel should detect the Express app from `src/server.js`. The server only starts a standalone listener for local `npm start`; on Vercel it exports the app instead. Verify `/` and `/api/health` after redeploying.
 - Vercel function storage is ephemeral. Any uploaded booking images must be moved to persistent object storage before relying on uploads in production.

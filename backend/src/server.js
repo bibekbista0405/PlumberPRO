@@ -111,7 +111,30 @@ app.use(rateLimit({
 }));
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads'), { maxAge: '7d' }));
 
-app.get('/api/health', async (req, res) => res.json({ ok: true, service: 'PlumbPro API', database: 'postgresql' }));
+// A lightweight root response makes the backend URL useful to verify in a browser.
+// Vercel deploys this as an API service; the React frontend is deployed separately.
+app.get('/', (req, res) => res.json({
+  ok: true,
+  service: 'PlumbPro API',
+  health: '/api/health',
+}));
+
+// Do not let a database outage prevent Vercel from loading the Express function.
+// Report database connectivity separately so deployment/runtime and DB failures
+// can be distinguished from one another.
+app.get('/api/health', async (req, res) => {
+  try {
+    await testConnection();
+    return res.json({ ok: true, service: 'PlumbPro API', database: 'connected' });
+  } catch (err) {
+    console.error('Health check database connection failed:', err.message);
+    return res.status(503).json({ ok: false, service: 'PlumbPro API', database: 'unavailable' });
+  }
+});
+
+// The backend is deployed separately from the React frontend on Vercel.
+// Return an empty response for the browser's automatic favicon request.
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -125,29 +148,39 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/feedback', feedbackRoutes);
 
-// Serve the React frontend from the same server so one ngrok tunnel on port 5000
-// exposes both the frontend and backend API. Hashed static assets (CRA build
-// filenames include a content hash) can be cached aggressively by the browser;
-// index.html must never be cached since it's what points at the current hashes.
-const frontendBuildPath = path.resolve(__dirname, '../../build');
-app.use(express.static(frontendBuildPath, {
-  maxAge: '1y',
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('index.html')) res.setHeader('Cache-Control', 'no-cache');
-  },
-}));
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api/')) return next();
-  res.set('Cache-Control', 'no-cache');
-  res.sendFile(path.join(frontendBuildPath, 'index.html'), err => {
-    if (err) next(err);
+// In local/combined deployments, optionally serve the React build from this
+// Express server (useful for a single local tunnel). On Vercel the frontend is
+// deployed separately, and the backend function must not try to read that build.
+if (!process.env.VERCEL) {
+  const frontendBuildPath = path.resolve(__dirname, '../../build');
+  app.use(express.static(frontendBuildPath, {
+    maxAge: '1y',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) res.setHeader('Cache-Control', 'no-cache');
+    },
+  }));
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) return next();
+    res.set('Cache-Control', 'no-cache');
+    res.sendFile(path.join(frontendBuildPath, 'index.html'), err => {
+      if (err) next(err);
+    });
   });
-});
+}
 
 app.use(notFound);
 app.use(errorHandler);
 
-const port = Number(process.env.PORT || 5000);
-testConnection()
-  .then(() => app.listen(port, () => console.log(`PlumbPro API running on http://localhost:${port}`)))
-  .catch(err => { console.error('Database connection failed:', err.message); process.exit(1); });
+// Export the Express app for Vercel's serverless runtime. Only start a
+// standalone HTTP listener when this file is run directly for local hosting.
+if (require.main === module) {
+  const port = Number(process.env.PORT || 5000);
+  testConnection()
+    .then(() => app.listen(port, () => console.log(`PlumbPro API running on http://localhost:${port}`)))
+    .catch(err => {
+      console.error('Database connection failed:', err.message);
+      process.exitCode = 1;
+    });
+}
+
+module.exports = app;
