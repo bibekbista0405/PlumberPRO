@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import '../styles/CustomerDashboard.css';
 import '../styles/BookingChat.css';
 import '../styles/MessagesInbox.css';
