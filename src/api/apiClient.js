@@ -1,4 +1,24 @@
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+// Normalize the configured backend URL once at build time. The frontend
+// environment variable may be supplied as either the backend origin or an
+// origin already ending in /api; both forms resolve to exactly one /api path.
+// This prevents malformed URLs such as https://host.vercel.app//auth/login
+// and ensures requests match the Express routes mounted under /api.
+function normalizeApiBase(value) {
+  const configured = String(value || '/api').trim().replace(/\/+$/, '');
+  if (!configured) return '/api';
+  if (configured.startsWith('/')) {
+    return configured === '/api' || configured.endsWith('/api')
+      ? configured
+      : `${configured}/api`;
+  }
+
+  const withoutTrailingSlash = configured.replace(/\/+$/, '');
+  return /\/api$/i.test(withoutTrailingSlash)
+    ? withoutTrailingSlash
+    : `${withoutTrailingSlash}/api`;
+}
+
+const API_URL = normalizeApiBase(process.env.REACT_APP_API_URL);
 
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('plumbpro_token');
@@ -16,7 +36,8 @@ export async function apiRequest(path, options = {}) {
     ...(options.headers || {}),
   };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const normalizedPath = `/${String(path || '').replace(/^\/+/, '')}`;
+  const response = await fetch(`${API_URL}${normalizedPath}`, { ...options, headers });
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     // Something in front of the API (an ngrok interstitial, a misconfigured

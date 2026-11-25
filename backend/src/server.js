@@ -51,11 +51,25 @@ app.use(helmet({
   },
   crossOriginResourcePolicy: { policy: 'same-site' },
 }));
-app.use(cors({
-  origin: process.env.FRONTEND_URL
-    ? process.env.FRONTEND_URL.split(',').map(v => v.trim())
-    : true
-}));
+// Normalize configured frontend origins (URL.origin removes trailing slashes
+// and paths) so a value such as https://plumberproo.vercel.app/ still matches
+// the browser's Origin header exactly. CORS middleware runs before rate
+// limiting and routes so OPTIONS preflight requests are answered directly.
+const frontendOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map(value => value.trim())
+  .filter(Boolean)
+  .map(value => {
+    try { return new URL(value).origin; }
+    catch { return value.replace(/\/+$/, ''); }
+  });
+
+const corsOptions = {
+  origin: frontendOrigins.length ? frontendOrigins : true,
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  optionsSuccessStatus: 204,
+};
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 
