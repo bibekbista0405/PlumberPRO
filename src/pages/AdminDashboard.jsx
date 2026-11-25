@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../styles/AdminDashboard.css';
 
@@ -94,7 +94,7 @@ function AdminDashboard() {
     navigate('/');
   };
 
-  const load = async (opts = {}) => {
+  const load = useCallback(async (opts = {}) => {
     if (!opts.silent) setLoading(true);
     setError('');
     try {
@@ -124,9 +124,9 @@ function AdminDashboard() {
     } finally {
       if (!opts.silent) setLoading(false);
     }
-  };
+  }, [analyticsRange]);
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [analyticsRange]);
+  useEffect(() => { load(); }, [load]);
   useAutoRefresh(() => load({ silent: true }), 40000);
 
   // -- Derived data ----------------------------------------------------------

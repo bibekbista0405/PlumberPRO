@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Icon from './Icon';
 import BookingChat from './BookingChat';
 import { getConversations } from '../api/messageApi';
@@ -29,15 +29,15 @@ function MessagesInbox({ title = 'Messages', emptyHint = 'Conversations open onc
   const [activeId, setActiveId] = useState(null);
   const [query, setQuery] = useState('');
 
-  const load = (opts = {}) => {
+  const load = useCallback((opts = {}) => {
     if (!opts.silent) setLoading(true);
     getConversations()
       .then(d => setConversations(d.conversations || []))
       .catch(e => { if (!opts.silent) setError(e.message); })
       .finally(() => { if (!opts.silent) setLoading(false); });
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [load]);
   useAutoRefresh(() => load({ silent: true }), 15000);
 
   const filtered = useMemo(

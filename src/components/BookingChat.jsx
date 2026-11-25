@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Icon from './Icon';
 import { useAuth } from '../context/AuthContext';
 import { getBookingMessages, sendBookingMessage } from '../api/messageApi';
@@ -14,14 +14,14 @@ function BookingChat({ bookingId, plumberAssigned, tall }) {
   const [loaded, setLoaded] = useState(false);
   const bottomRef = useRef(null);
 
-  const load = (opts = {}) => {
+  const load = useCallback((opts = {}) => {
     getBookingMessages(bookingId)
       .then(d => setMessages(d.messages || []))
       .catch(e => { if (!opts.silent) setError(e.message); })
       .finally(() => setLoaded(true));
-  };
+  }, [bookingId]);
 
-  useEffect(() => { load(); }, [bookingId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [load]);
   useAutoRefresh(() => load({ silent: true }), 15000);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
 

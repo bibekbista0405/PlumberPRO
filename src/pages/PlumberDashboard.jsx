@@ -25,10 +25,10 @@ function PlumberDashboard() {
   const [jobSearch, setJobSearch] = useState('');
   const [updatingJobId, setUpdatingJobId] = useState(null);
   const [bookings, setBookings] = useState([]); const [profile, setProfile] = useState(null); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState(''); const [message, setMessage] = useState(''); const [photoBusy, setPhotoBusy] = useState(false); const [selected, setSelected] = useState(null); const [completionBusy, setCompletionBusy] = useState(false); const [unreadMessages, setUnreadMessages] = useState(0);
-  const loadBookings = (opts = {}) => getPlumberBookings().then(b => { setBookings(b.bookings || []); if (selected) setSelected(prev => b.bookings.find(x => x.id === prev.id) || prev) }).catch(e => { if (!opts.silent) setError(e.message) });
-  const loadUnread = () => getUnreadMessageCount().then(d => setUnreadMessages(d.unread || 0)).catch(() => {});
-  const load = async () => { setLoading(true); setError(''); try { const [b, p] = await Promise.all([getPlumberBookings(), getMyPlumberProfile()]); setBookings(b.bookings || []); setProfile(p.profile); } catch (e) { setError(e.message) } finally { setLoading(false) } };
-  useEffect(() => { load(); loadUnread(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const loadBookings = useCallback((opts = {}) => getPlumberBookings().then(b => { setBookings(b.bookings || []); setSelected(prev => prev ? (b.bookings || []).find(x => x.id === prev.id) || prev : prev) }).catch(e => { if (!opts.silent) setError(e.message) }), []);
+  const loadUnread = useCallback(() => getUnreadMessageCount().then(d => setUnreadMessages(d.unread || 0)).catch(() => {}), []);
+  const load = useCallback(async () => { setLoading(true); setError(''); try { const [b, p] = await Promise.all([getPlumberBookings(), getMyPlumberProfile()]); setBookings(b.bookings || []); setProfile(p.profile); } catch (e) { setError(e.message) } finally { setLoading(false) } }, []);
+  useEffect(() => { load(); loadUnread(); }, [load, loadUnread]);
   // Only bookings/messages are polled in the background — the profile form is left alone while the plumber may be mid-edit.
   useAutoRefresh(() => { loadBookings({ silent: true }); loadUnread(); });
   const update = async (id, status) => {

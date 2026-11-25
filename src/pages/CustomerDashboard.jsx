@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/CustomerDashboard.css';
 import '../styles/BookingChat.css';
@@ -34,9 +34,9 @@ function CustomerDashboard() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [bookings, setBookings] = useState([]), [loading, setLoading] = useState(true), [error, setError] = useState(''), [message, setMessage] = useState(''), [selected, setSelected] = useState(null), [review, setReview] = useState({ rating: 5, comment: '' }), [reviewing, setReviewing] = useState(null), [reviewBusy, setReviewBusy] = useState(false), [reporting, setReporting] = useState(null), [photoBusy, setPhotoBusy] = useState(false), [unreadMessages, setUnreadMessages] = useState(0);
 
-  const load = (opts = {}) => { if (!opts.silent) setLoading(true); getMyBookings().then(d => { setBookings(d.bookings || []); if (selected) setSelected(prev => d.bookings.find(b => b.id === prev.id) || prev) }).catch(e => { if (!opts.silent) setError(e.message) }).finally(() => { if (!opts.silent) setLoading(false) }) };
-  const loadUnread = () => getUnreadMessageCount().then(d => setUnreadMessages(d.unread || 0)).catch(() => {});
-  useEffect(() => { load(); loadUnread(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const load = useCallback((opts = {}) => { if (!opts.silent) setLoading(true); getMyBookings().then(d => { setBookings(d.bookings || []); setSelected(prev => prev ? (d.bookings || []).find(b => b.id === prev.id) || prev : prev) }).catch(e => { if (!opts.silent) setError(e.message) }).finally(() => { if (!opts.silent) setLoading(false) }) }, []);
+  const loadUnread = useCallback(() => getUnreadMessageCount().then(d => setUnreadMessages(d.unread || 0)).catch(() => {}), []);
+  useEffect(() => { load(); loadUnread(); }, [load, loadUnread]);
   useAutoRefresh(() => { load({ silent: true }); loadUnread(); });
 
   const openBooking = async booking => { setSelected(booking); setDetailHistory([]); setDetailLoading(true); try { const detail = await getBookingDetails(booking.id); setSelected(detail.booking || booking); setDetailHistory(Array.isArray(detail.history) ? detail.history : []); } catch (e) { setError(e.message); } finally { setDetailLoading(false); } };
