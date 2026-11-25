@@ -20,6 +20,7 @@ const messageRoutes = require('./routes/messages');
 const pushRoutes = require('./routes/push');
 const feedbackRoutes = require('./routes/feedback');
 const { notFound, errorHandler } = require('./middleware/error');
+const { uploadRoot } = require('./middleware/upload');
 
 const app = express();
 
@@ -109,7 +110,7 @@ app.use(rateLimit({
   keyGenerator: rateLimitKey,
   message: { message: 'Too many requests. Please wait a minute and try again.' },
 }));
-app.use('/uploads', express.static(path.resolve(__dirname, '../uploads'), { maxAge: '7d' }));
+app.use('/uploads', express.static(uploadRoot, { maxAge: '7d' }));
 
 // A lightweight root response makes the backend URL useful to verify in a browser.
 // Vercel deploys this as an API service; the React frontend is deployed separately.

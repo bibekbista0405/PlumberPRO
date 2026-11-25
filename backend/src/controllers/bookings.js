@@ -3,7 +3,7 @@ const { createNotification } = require('./notifications');
 const { sendPush } = require('../utils/push');
 const { sendEmail, wrap } = require('../utils/email');
 const { trackEvent } = require('../utils/analytics');
-const { bookingUrlPrefix } = require('../middleware/upload');
+const { bookingUrlPrefix, bookingUploadDir } = require('../middleware/upload');
 const fs = require('fs');
 const path = require('path');
 const { validateBookingInput } = require('../utils/bookingValidation');
@@ -311,7 +311,7 @@ async function uploadBookingPhoto(req, res, next) {
     const url = `${bookingUrlPrefix}/${req.file.filename}`;
     await pool.query('UPDATE bookings SET photo_url = ? WHERE id = ?', [url, req.params.id]);
     if (rows[0].photo_url) {
-      const previousPath = path.join(__dirname, '../../uploads/bookings', path.basename(rows[0].photo_url));
+      const previousPath = path.join(bookingUploadDir, path.basename(rows[0].photo_url));
       fs.unlink(previousPath, () => {});
     }
     res.json({ photo_url: url });
@@ -333,7 +333,7 @@ async function uploadCompletionPhoto(req, res, next) {
     const url = `${bookingUrlPrefix}/${req.file.filename}`;
     await pool.query('UPDATE bookings SET completion_photo_url = ? WHERE id = ?', [url, req.params.id]);
     if (rows[0].completion_photo_url) {
-      const previousPath = path.join(__dirname, '../../uploads/bookings', path.basename(rows[0].completion_photo_url));
+      const previousPath = path.join(bookingUploadDir, path.basename(rows[0].completion_photo_url));
       fs.unlink(previousPath, () => {});
     }
     res.json({ completion_photo_url: url });

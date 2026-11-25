@@ -1,11 +1,19 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+
+// Vercel's deployed application directory is not a writable persistent disk.
+// Use its writable temporary directory for request-time uploads. For local
+// deployments, keep uploads inside backend/uploads as before.
+const uploadRoot = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'plumberpro-uploads')
+  : path.resolve(__dirname, '../../uploads');
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 function makeUploader(subfolder, prefix) {
-  const dir = path.resolve(__dirname, '../../uploads', subfolder);
+  const dir = path.join(uploadRoot, subfolder);
   fs.mkdirSync(dir, { recursive: true });
   const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, dir),
@@ -29,6 +37,7 @@ const plumberPhotos = makeUploader('plumbers', 'plumber');
 const bookingPhotos = makeUploader('bookings', 'booking');
 
 module.exports = {
+  uploadRoot,
   photoUpload: plumberPhotos.uploader,
   uploadDir: plumberPhotos.dir,
   bookingPhotoUpload: bookingPhotos.uploader,
