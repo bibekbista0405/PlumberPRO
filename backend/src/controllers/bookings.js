@@ -57,7 +57,7 @@ async function createBooking(req, res, next) {
     const validationErrors = validateBookingInput(req.body);
     if (validationErrors.length) return res.status(400).json({ message: validationErrors[0], errors: validationErrors });
     const [[scheduleCheck]] = await connection.query(
-      'SELECT (TIMESTAMP(?, ?) < NOW()) AS is_past',
+      'SELECT ((?::date + ?::time) < NOW()) AS is_past',
       [booking_date, booking_time]
     );
     if (Number(scheduleCheck.is_past) === 1) {

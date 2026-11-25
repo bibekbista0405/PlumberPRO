@@ -13,7 +13,7 @@ const { pool, testConnection } = require('../config/db');
       process.exit(1);
     }
     const hash = await bcrypt.hash(password, 12);
-    await pool.query(`INSERT INTO users (name,email,password_hash,role,status) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE name=VALUES(name), password_hash=VALUES(password_hash), role='admin', status='active'`, [name, email.toLowerCase(), hash, 'admin', 'active']);
+    await pool.query(`INSERT INTO users (name,email,password_hash,role,status) VALUES (?,?,?,?,?) ON CONFLICT (email) DO UPDATE SET name=EXCLUDED.name, password_hash=EXCLUDED.password_hash, role='admin', status='active'`, [name, email.toLowerCase(), hash, 'admin', 'active']);
     console.log(`Admin account ready: ${email}`);
   } catch (err) { console.error(err); process.exitCode = 1; }
   finally { await pool.end(); }

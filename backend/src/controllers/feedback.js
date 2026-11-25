@@ -21,7 +21,7 @@ async function submitFeedback(req, res, next) {
     await pool.query(
       `INSERT INTO platform_feedback (user_id, role, rating, comment, status)
        VALUES (?, ?, ?, ?, 'pending')
-       ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment), status = 'pending'`,
+       ON CONFLICT (user_id) DO UPDATE SET rating = EXCLUDED.rating, comment = EXCLUDED.comment, status = 'pending'`,
       [req.user.id, req.user.role, rating, comment]
     );
     res.status(201).json({ message: 'Thanks for the feedback — our team will take a look.' });

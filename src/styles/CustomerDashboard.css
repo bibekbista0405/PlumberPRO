@@ -119,3 +119,10 @@
 .booking-timeline li p{margin:4px 0;color:var(--muted);font-size:.8rem;line-height:1.5}
 .booking-timeline li small,.timeline-muted{color:var(--muted);font-size:.73rem}
 @media(max-width:560px){.customer-booking-filters{gap:6px}.customer-booking-filters button{padding:7px 10px;font-size:.75rem}.booking-timeline{padding:14px}}
+
+/* Plumber job search and workflow filters */
+.plumber-job-tools{display:grid;gap:12px;margin:0 0 18px}
+.plumber-job-tools>input{width:100%;max-width:460px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font:inherit}
+.plumber-job-tools>input:focus{outline:2px solid color-mix(in srgb,var(--primary) 35%,transparent);border-color:var(--primary)}
+.plumber-job-tools .customer-booking-filters{margin:0}
+.plumber-dashboard button:disabled{opacity:.58;cursor:not-allowed}

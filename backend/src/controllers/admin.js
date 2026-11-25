@@ -70,14 +70,14 @@ async function verifyPlumber(req, res, next) {
 async function analytics(req, res, next) {
   try {
     const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 365);
-    const [[searches]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'plumber_search' AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)", [days]);
-    const [[bookingsCreated]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'booking_created' AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)", [days]);
-    const [[bookingsCompleted]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'booking_completed' AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)", [days]);
-    const [[registrations]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'user_registered' AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)", [days]);
-    const [[reviews]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'review_submitted' AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)", [days]);
+    const [[searches]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'plumber_search' AND created_at >= (NOW() - (? * INTERVAL '1 day'))", [days]);
+    const [[bookingsCreated]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'booking_created' AND created_at >= (NOW() - (? * INTERVAL '1 day'))", [days]);
+    const [[bookingsCompleted]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'booking_completed' AND created_at >= (NOW() - (? * INTERVAL '1 day'))", [days]);
+    const [[registrations]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'user_registered' AND created_at >= (NOW() - (? * INTERVAL '1 day'))", [days]);
+    const [[reviews]] = await pool.query("SELECT COUNT(*) AS total FROM analytics_events WHERE event_name = 'review_submitted' AND created_at >= (NOW() - (? * INTERVAL '1 day'))", [days]);
     const [daily] = await pool.query(
       `SELECT DATE(created_at) AS day, event_name, COUNT(*) AS total FROM analytics_events
-       WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) AND event_name IN ('plumber_search','booking_created','booking_completed')
+       WHERE created_at >= (NOW() - (? * INTERVAL '1 day')) AND event_name IN ('plumber_search','booking_created','booking_completed')
        GROUP BY DATE(created_at), event_name ORDER BY day ASC`,
       [days]
     );

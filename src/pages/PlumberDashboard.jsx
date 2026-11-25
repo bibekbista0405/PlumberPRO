@@ -21,6 +21,9 @@ const tabs = [['overview', 'Overview', 'dashboard'], ['jobs', 'Jobs', 'briefcase
 function PlumberDashboard() {
   const { user } = useAuth();
   const [tab, setTab] = useState('overview');
+  const [jobFilter, setJobFilter] = useState('all');
+  const [jobSearch, setJobSearch] = useState('');
+  const [updatingJobId, setUpdatingJobId] = useState(null);
   const [bookings, setBookings] = useState([]); const [profile, setProfile] = useState(null); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState(''); const [message, setMessage] = useState(''); const [photoBusy, setPhotoBusy] = useState(false); const [selected, setSelected] = useState(null); const [completionBusy, setCompletionBusy] = useState(false); const [unreadMessages, setUnreadMessages] = useState(0);
   const loadBookings = (opts = {}) => getPlumberBookings().then(b => { setBookings(b.bookings || []); if (selected) setSelected(prev => b.bookings.find(x => x.id === prev.id) || prev) }).catch(e => { if (!opts.silent) setError(e.message) });
   const loadUnread = () => getUnreadMessageCount().then(d => setUnreadMessages(d.unread || 0)).catch(() => {});
@@ -28,12 +31,27 @@ function PlumberDashboard() {
   useEffect(() => { load(); loadUnread(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Only bookings/messages are polled in the background — the profile form is left alone while the plumber may be mid-edit.
   useAutoRefresh(() => { loadBookings({ silent: true }); loadUnread(); });
-  const update = async (id, status) => { setError(''); try { await updatePlumberBooking(id, status); load() } catch (e) { setError(e.message) } };
+  const update = async (id, status) => {
+    if (updatingJobId !== null) return;
+    setUpdatingJobId(id); setError(''); setMessage('');
+    try {
+      await updatePlumberBooking(id, status);
+      setMessage(`Job #${id} updated to ${status.replace('_', ' ')}.`);
+      await load();
+    } catch (e) { setError(e.message); }
+    finally { setUpdatingJobId(null); }
+  };
   const saveProfile = async e => { e.preventDefault(); setSaving(true); setError(''); setMessage(''); try { const data = await updateMyPlumberProfile(profile); setProfile(data.profile); setMessage('Profile updated. Verification status is controlled by the platform.') } catch (e) { setError(e.message) } finally { setSaving(false) } };
   const changePhoto = async e => { const file = e.target.files?.[0]; if (!file) return; setPhotoBusy(true); setError(''); try { const data = await uploadPlumberPhoto(file); setProfile(v => ({ ...v, photo_url: data.photo_url })) } catch (err) { setError(err.message) } finally { setPhotoBusy(false); e.target.value = '' } };
   const addCompletionPhoto = async (id, file) => { if (!file) return; setCompletionBusy(true); setError(''); try { await uploadCompletionPhoto(id, file); load() } catch (err) { setError(err.message) } finally { setCompletionBusy(false) } };
   const active = bookings.filter(b => ['confirmed', 'on_the_way', 'arrived', 'in_progress', 'assigned'].includes(b.status)).length; const completed = bookings.filter(b => b.status === 'completed' || b.status === 'reviewed').length;
   const recentJobs = bookings.slice(0, 5);
+  const visibleJobs = bookings.filter(b => {
+    const matchesStatus = jobFilter === 'all' || (jobFilter === 'active' ? ['assigned', 'confirmed', 'on_the_way', 'arrived', 'in_progress'].includes(b.status) : jobFilter === 'completed' ? ['completed', 'reviewed'].includes(b.status) : b.status === jobFilter);
+    const needle = jobSearch.trim().toLowerCase();
+    const matchesSearch = !needle || [b.customer_name, b.customer_email, b.service_name, b.address, String(b.id)].some(value => String(value || '').toLowerCase().includes(needle));
+    return matchesStatus && matchesSearch;
+  });
 
   return <div className="dashboard-app">
     <DashboardTopbar roleLabel="Plumber Workspace" tabs={tabs} activeTab={tab} onTabChange={key => { setTab(key); if (key === 'messages') loadUnread(); }} unreadMessages={unreadMessages} />
@@ -57,7 +75,7 @@ function PlumberDashboard() {
       )}
 
       {tab === 'jobs' && (
-        <section className="booking-history dash-section-page"><div className="section-heading"><div><h2>Assigned jobs</h2><p>Only bookings assigned to your plumber account are shown here.</p></div><button onClick={() => load()}><Icon name="refresh" size={13} /> Refresh</button></div>{loading ? <div className="empty-state">Loading jobs…</div> : bookings.length === 0 ? <div className="empty-state">No jobs have been assigned to you yet.</div> : <div className="table-wrap"><table><thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Address</th><th>Status</th><th>Actions</th></tr></thead><tbody>{bookings.map(b => <tr key={b.id}><td><strong>{b.customer_name}</strong><small className="time-line">{b.customer_email}</small></td><td>{b.service_name}</td><td>{new Date(b.booking_date).toLocaleDateString()}</td><td>{b.address}</td><td><span className={`status status-${b.status}`}>{b.status.replace('_', ' ')}</span></td><td><button className="table-btn" onClick={() => setSelected(b)}>View</button>{b.status === 'assigned' && <button className="table-btn" onClick={() => update(b.id, 'confirmed')}>Accept</button>}{b.status === 'confirmed' && <button className="table-btn" onClick={() => update(b.id, 'on_the_way')}>On the way</button>}{b.status === 'on_the_way' && <button className="table-btn" onClick={() => update(b.id, 'arrived')}>Arrived</button>}{b.status === 'arrived' && <button className="table-btn" onClick={() => update(b.id, 'in_progress')}>Start job</button>}{b.status === 'in_progress' && <button className="table-btn" onClick={() => update(b.id, 'completed')}>Mark complete</button>}{b.status === 'assigned' && <button className="table-btn danger" onClick={() => update(b.id, 'rejected')}>Reject</button>}{['confirmed', 'on_the_way', 'arrived'].includes(b.status) && <button className="table-btn danger" onClick={() => update(b.id, 'cancelled')}>Cancel</button>}</td></tr>)}</tbody></table></div>}
+        <section className="booking-history dash-section-page"><div className="section-heading"><div><h2>Assigned jobs</h2><p>Only bookings assigned to your plumber account are shown here.</p></div><button onClick={() => load()} disabled={loading}><Icon name="refresh" size={13} /> {loading ? 'Refreshing…' : 'Refresh'}</button></div><div className="plumber-job-tools"><input aria-label="Search jobs" type="search" value={jobSearch} onChange={e => setJobSearch(e.target.value)} placeholder="Search customer, service, address or job #" /><div className="customer-booking-filters" role="group" aria-label="Filter jobs">{[['all','All jobs'],['active','Active'],['assigned','Needs response'],['completed','Completed'],['cancelled','Cancelled']].map(([value,label]) => <button type="button" key={value} className={jobFilter === value ? 'active' : ''} aria-pressed={jobFilter === value} onClick={() => setJobFilter(value)}>{label}</button>)}</div></div>{loading ? <div className="empty-state">Loading jobs…</div> : bookings.length === 0 ? <div className="empty-state">No jobs have been assigned to you yet.</div> : visibleJobs.length === 0 ? <div className="empty-state">No jobs match this search or filter.</div> : <div className="table-wrap"><table><thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Address</th><th>Status</th><th>Actions</th></tr></thead><tbody>{visibleJobs.map(b => <tr key={b.id}><td><strong>{b.customer_name}</strong><small className="time-line">{b.customer_email}</small></td><td>{b.service_name}</td><td>{new Date(b.booking_date).toLocaleDateString()}</td><td>{b.address}</td><td><span className={`status status-${b.status}`}>{b.status.replace('_', ' ')}</span></td><td><button className="table-btn" onClick={() => setSelected(b)}>View</button>{b.status === 'assigned' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'confirmed')}>{updatingJobId === b.id ? 'Updating…' : 'Accept'}</button>}{b.status === 'confirmed' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'on_the_way')}>On the way</button>}{b.status === 'on_the_way' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'arrived')}>Arrived</button>}{b.status === 'arrived' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'in_progress')}>Start job</button>}{b.status === 'in_progress' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'completed')}>Mark complete</button>}{b.status === 'assigned' && <button className="table-btn danger" disabled={updatingJobId !== null} onClick={() => update(b.id, 'rejected')}>Reject</button>}{['confirmed', 'on_the_way', 'arrived'].includes(b.status) && <button className="table-btn danger" disabled={updatingJobId !== null} onClick={() => update(b.id, 'cancelled')}>Cancel</button>}</td></tr>)}</tbody></table></div>}
         <DashboardWatermark />
         </section>
       )}

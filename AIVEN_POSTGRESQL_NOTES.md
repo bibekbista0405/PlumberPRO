@@ -1,18 +1,52 @@
-# Aiven PostgreSQL connection details
+# PlumbPro — Aiven PostgreSQL setup
 
-The connection values supplied for Aiven have been added to `backend/.env.example` and copied into `backend/.env.aiven.example`. The supplied Project CA certificate is stored at `backend/certs/aiven-ca.pem`.
+PlumbPro now uses **Aiven PostgreSQL as its only database**. XAMPP/MySQL is not used by the backend.
 
-## Important compatibility note
+## 1. Configure the backend environment
 
-The current PlumberPRO application is built around MySQL/MariaDB: it uses the `mysql2` package, MySQL connection-pool APIs, `?` placeholders, and MySQL-specific SQL. The Aiven service supplied here is PostgreSQL. The current runtime therefore **does not connect to Aiven** merely by adding these environment variables. Do not replace `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, or `DB_NAME` with the Aiven values.
+From the project root, copy `backend/.env.example` to `backend/.env`. Keep the supplied Aiven host, port, database, and username. Replace only `PGPASSWORD` with the actual password from your Aiven service. Keep `PGSSL=true`, `PGSSL_REJECT_UNAUTHORIZED=true`, and `PGSSL_CA_FILE=./certs/aiven-ca.pem`. The CA file is included at `backend/certs/aiven-ca.pem`.
 
-A proper migration requires a planned database adapter/schema migration, SQL dialect updates, migration of existing data, and integration tests against a PostgreSQL instance. Until that work is completed, the existing MySQL settings remain the active database configuration.
+Never put the Aiven password in frontend environment variables, React code, GitHub, screenshots, or public messages. `backend/.env` is ignored by Git.
 
-## Configure the local environment
+## 2. Create the database tables
 
-1. Copy `backend/.env.example` to `backend/.env` (or merge the Aiven block into your existing local file).
-2. Set `AIVEN_PG_PASSWORD` to the actual Aiven password in your local `.env`. The password was redacted in the details shared in chat, so no password has been inserted.
-3. Keep `AIVEN_PG_SSL=true`, `AIVEN_PG_SSL_REJECT_UNAUTHORIZED=true`, and `AIVEN_PG_SSL_CA_FILE=./certs/aiven-ca.pem`.
-4. Keep the current `DB_*` variables pointing at your working MySQL/MariaDB database until the PostgreSQL migration is explicitly completed.
+1. Open the Aiven service in the Aiven Console.
+2. Open **Query editor** (or connect with pgAdmin / DBeaver).
+3. Open the project-root file `database.postgresql.sql`.
+4. Execute the complete SQL against the `defaultdb` database.
+5. Confirm that the application tables were created.
 
-The CA certificate is public trust material, not a database password. Never commit a real `.env` file or share the Aiven password.
+Do **not** import `database.sql` or any `database-migration-*.sql` MySQL files into PostgreSQL. `database.postgresql.sql` is the PostgreSQL-native schema and includes the default service catalog.
+
+## 3. Install and start
+
+```powershell
+cd backend
+npm install
+npm start
+```
+
+The backend health endpoint is `http://localhost:5000/api/health`. A healthy response reports `database: postgresql`.
+
+In a second terminal, from the project root:
+
+```powershell
+npm install
+npm start
+```
+
+The React development server uses the existing proxy to send `/api` requests to port 5000. Restart it after changing configuration.
+
+## 4. Create the first admin
+
+After the schema is installed, run this from the `backend` folder:
+
+```powershell
+node src/utils/seedAdmin.js admin@example.com "Use-A-Strong-Password" "PlumbPro Admin"
+```
+
+Use your own email and a unique strong password. Do not reuse the example password.
+
+## Important migration note
+
+This setup creates a clean PostgreSQL schema. If your old MySQL database contained real users, bookings, or other records, those records are **not automatically copied**. Export and migrate them separately before deleting or abandoning the old database.

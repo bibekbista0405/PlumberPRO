@@ -54,7 +54,7 @@ async function searchPlumbers(req, res, next) {
     }
 
     let distanceSelect = `NULL AS distance_km`;
-    let having = '';
+    let distanceFilter = '';
 
     if (hasCoords) {
       // Clamp ACOS input to [-1, 1] to avoid floating point domain errors.
@@ -63,10 +63,9 @@ async function searchPlumbers(req, res, next) {
         SIN(RADIANS(?)) * SIN(RADIANS(pp.latitude))
       ))) AS distance_km`;
       params.unshift(latValue, lngValue, latValue);
-      having = ` HAVING distance_km <= ? AND (
-        pp.service_radius_km IS NULL OR distance_km <= pp.service_radius_km OR pp.can_travel = 1
-      )`;
-      params.push(radius);
+      const distanceExpr = `6371 * ACOS(LEAST(1, GREATEST(-1, COS(RADIANS(?)) * COS(RADIANS(pp.latitude)) * COS(RADIANS(pp.longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(pp.latitude)))))`;
+      distanceFilter = ` AND (${distanceExpr}) <= ? AND (pp.service_radius_km IS NULL OR (${distanceExpr}) <= pp.service_radius_km OR pp.can_travel = 1)`;
+      params.push(latValue, lngValue, latValue, radius, latValue, lngValue, latValue);
     }
 
     const sql = `
@@ -79,7 +78,7 @@ async function searchPlumbers(req, res, next) {
       LEFT JOIN plumber_profiles pp ON pp.user_id = u.id
       ${ratingJoin}
       ${where}
-      ${having}
+      ${distanceFilter}
       ORDER BY ${hasCoords ? 'distance_km ASC, ' : ''}pp.verified DESC, rating DESC, review_count DESC, u.name ASC
       LIMIT 30
     `;
@@ -186,24 +185,33 @@ async function updateMyProfile(req, res, next) {
       INSERT INTO plumber_profiles
         (user_id, profession, education, certifications, experience_years, work_mode, available, location_name, latitude, longitude, service_radius_km, can_travel, bio, verified)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      ON DUPLICATE KEY UPDATE
-        -- Availability/photo-only edits do not invalidate a completed admin verification.
-        -- Changes to professional claims or service coverage require re-verification.
-        verified=IF(
-          NOT (
-            profession <=> VALUES(profession) AND education <=> VALUES(education) AND
-            certifications <=> VALUES(certifications) AND experience_years <=> VALUES(experience_years) AND
-            work_mode <=> VALUES(work_mode) AND location_name <=> VALUES(location_name) AND
-            latitude <=> VALUES(latitude) AND longitude <=> VALUES(longitude) AND
-            service_radius_km <=> VALUES(service_radius_km) AND can_travel <=> VALUES(can_travel) AND
-            bio <=> VALUES(bio)
-          ), 0, verified
-        ),
-        verified_at=IF(verified=0, NULL, verified_at),
-        profession=VALUES(profession), education=VALUES(education), certifications=VALUES(certifications), experience_years=VALUES(experience_years),
-        work_mode=VALUES(work_mode), available=VALUES(available), location_name=VALUES(location_name),
-        latitude=VALUES(latitude), longitude=VALUES(longitude), service_radius_km=VALUES(service_radius_km),
-        can_travel=VALUES(can_travel), bio=VALUES(bio)
+      ON CONFLICT (user_id) DO UPDATE SET
+        verified = CASE WHEN
+          (plumber_profiles.profession, plumber_profiles.education, plumber_profiles.certifications,
+           plumber_profiles.experience_years, plumber_profiles.work_mode, plumber_profiles.location_name,
+           plumber_profiles.latitude, plumber_profiles.longitude, plumber_profiles.service_radius_km,
+           plumber_profiles.can_travel, plumber_profiles.bio)
+          IS DISTINCT FROM
+          (EXCLUDED.profession, EXCLUDED.education, EXCLUDED.certifications,
+           EXCLUDED.experience_years, EXCLUDED.work_mode, EXCLUDED.location_name,
+           EXCLUDED.latitude, EXCLUDED.longitude, EXCLUDED.service_radius_km,
+           EXCLUDED.can_travel, EXCLUDED.bio)
+          THEN 0 ELSE plumber_profiles.verified END,
+        verified_at = CASE WHEN
+          (plumber_profiles.profession, plumber_profiles.education, plumber_profiles.certifications,
+           plumber_profiles.experience_years, plumber_profiles.work_mode, plumber_profiles.location_name,
+           plumber_profiles.latitude, plumber_profiles.longitude, plumber_profiles.service_radius_km,
+           plumber_profiles.can_travel, plumber_profiles.bio)
+          IS DISTINCT FROM
+          (EXCLUDED.profession, EXCLUDED.education, EXCLUDED.certifications,
+           EXCLUDED.experience_years, EXCLUDED.work_mode, EXCLUDED.location_name,
+           EXCLUDED.latitude, EXCLUDED.longitude, EXCLUDED.service_radius_km,
+           EXCLUDED.can_travel, EXCLUDED.bio)
+          THEN NULL ELSE plumber_profiles.verified_at END,
+        profession=EXCLUDED.profession, education=EXCLUDED.education, certifications=EXCLUDED.certifications,
+        experience_years=EXCLUDED.experience_years, work_mode=EXCLUDED.work_mode, available=EXCLUDED.available,
+        location_name=EXCLUDED.location_name, latitude=EXCLUDED.latitude, longitude=EXCLUDED.longitude,
+        service_radius_km=EXCLUDED.service_radius_km, can_travel=EXCLUDED.can_travel, bio=EXCLUDED.bio
     `, [
       req.user.id, profession.trim(), education.trim(), certifications.trim(), Number(experience_years), work_mode,
       available ? 1 : 0, location_name.trim(), latitude === null || latitude === '' ? null : Number(latitude),
@@ -238,7 +246,7 @@ async function uploadProfilePhoto(req, res, next) {
     await pool.query(
       `INSERT INTO plumber_profiles (user_id, profession, location_name, photo_url)
        VALUES (?, '', '', ?)
-       ON DUPLICATE KEY UPDATE photo_url = VALUES(photo_url)`,
+       ON CONFLICT (user_id) DO UPDATE SET photo_url = EXCLUDED.photo_url`,
       [req.user.id, photoUrl]
     );
 

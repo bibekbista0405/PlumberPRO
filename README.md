@@ -1,29 +1,21 @@
 # PlumbPro — Full-stack plumbing service platform
 
-PlumbPro is a React + Express + MySQL/MariaDB application for customers, plumbers and administrators.
+PlumbPro is a React + Express application backed by Aiven PostgreSQL for customers, plumbers and administrators.
 
 ## Stack
 
 - React + React Router
 - Node.js + Express
-- MySQL/MariaDB through XAMPP
+- Aiven PostgreSQL (TLS-encrypted connection)
 - JWT + bcrypt authentication
 - Browser Geolocation API for opt-in location discovery
 - OpenStreetMap Nominatim for optional reverse-geocoding of an explicitly shared location
 
 ## Local setup
 
-### 1. XAMPP
+### 1. Aiven PostgreSQL
 
-Start **MySQL** in XAMPP. Apache is not required for the React/Express development setup.
-
-Open phpMyAdmin:
-
-`http://localhost/phpmyadmin`
-
-For a fresh database, import `database.sql`.
-
-If you already have the previous PlumbPro database, run `database-migration.sql` once against `plumber_portal` to create `plumber_profiles` and migrate existing plumber users into profile records.
+Open your Aiven PostgreSQL service and run the PostgreSQL-native schema in `database.postgresql.sql` against `defaultdb`. No local database server or XAMPP installation is required.
 
 ### 2. Backend
 
@@ -31,11 +23,14 @@ Create `backend/.env` from `backend/.env.example` and configure:
 
 ```env
 PORT=5000
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=plumber_portal
-DB_USER=root
-DB_PASSWORD=
+PGHOST=your-aiven-host.aivencloud.com
+PGPORT=your-aiven-port
+PGDATABASE=defaultdb
+PGUSER=avnadmin
+PGPASSWORD=your-aiven-password
+PGSSL=true
+PGSSL_REJECT_UNAUTHORIZED=true
+PGSSL_CA_FILE=./certs/aiven-ca.pem
 JWT_SECRET=replace-with-a-long-random-secret
 JWT_EXPIRES_IN=7d
 FRONTEND_URL=http://localhost:3000
@@ -65,7 +60,7 @@ Open `http://localhost:3000`.
 1. A plumber chooses **Plumber** during registration.
 2. The browser asks for location permission. Permission is optional.
 3. The plumber provides profession, education/training, experience, solo/team model, availability, service area, service radius and travel capability.
-4. The profile is stored in MySQL with `verified = 0`.
+4. The profile is stored in Aiven PostgreSQL with `verified = 0`.
 5. An admin reviews the profile and verifies it.
 6. Only active, available and verified plumbers appear in public search.
 7. Customer search can use an area name or opt-in coordinates.
@@ -74,20 +69,20 @@ Open `http://localhost:3000`.
 
 ## No fake operational data
 
-The application does not create fake customers, plumbers, bookings, reviews or messages. The default service catalog in `database.sql` is configuration for the actual service menu; operational records are created through the application.
+The application does not create fake customers, plumbers, bookings, reviews or messages. The default service catalog in `database.postgresql.sql` is configuration for the actual service menu; operational records are created through the application.
 
 ## Production notes
 
-- Replace the local MySQL database with a hosted MySQL/MariaDB-compatible database for deployment.
+- The backend connects to Aiven PostgreSQL using TLS. Keep the database password only in `backend/.env` or your hosting provider’s secret environment variables.
 - Use HTTPS before enabling production geolocation.
 - Review the privacy policy and obtain legal review before launch.
 - Review OpenStreetMap Nominatim usage requirements before production use; a dedicated geocoding provider may be preferable for scale.
 
 ## PlumbPro local setup
 
-### 1. MySQL / XAMPP
+### 1. Aiven PostgreSQL
 
-Start **MySQL** in XAMPP and use the existing `plumber_portal` database. For an older database, run `database-migration.sql` in phpMyAdmin before starting the API.
+Create the tables by executing `database.postgresql.sql` against your Aiven `defaultdb` database. Configure the `PG*` variables in `backend/.env` as described in `AIVEN_POSTGRESQL_NOTES.md`. No local database server is required.
 
 ### 2. Backend
 
@@ -98,7 +93,7 @@ npm install
 npm run dev
 ```
 
-Set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, and `FRONTEND_URL` in `backend/.env`.
+Set `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, the SSL settings, `JWT_SECRET`, and `FRONTEND_URL` in `backend/.env`.
 
 ### 3. Frontend
 
@@ -117,4 +112,4 @@ For deployed location search, serve the site over HTTPS. Browsers allow geolocat
 
 ### No fake plumber data
 
-Public search only returns plumbers that exist in MySQL and are active, available, and admin-verified. Ratings and review counts come from the real `reviews` table.
+Public search only returns plumbers that exist in Aiven PostgreSQL and are active, available, and admin-verified. Ratings and review counts come from the real `reviews` table.

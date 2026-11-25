@@ -97,7 +97,7 @@ app.use(rateLimit({
 }));
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads'), { maxAge: '7d' }));
 
-app.get('/api/health', async (req, res) => res.json({ ok: true, service: 'PlumbPro API', database: 'mysql' }));
+app.get('/api/health', async (req, res) => res.json({ ok: true, service: 'PlumbPro API', database: 'postgresql' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/bookings', bookingRoutes);

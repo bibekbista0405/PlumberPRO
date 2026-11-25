@@ -11,7 +11,7 @@ async function subscribe(req, res, next) {
     if (!endpoint || !keys?.p256dh || !keys?.auth) return res.status(400).json({ message: 'Invalid subscription.' });
     await pool.query(
       `INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE user_id = VALUES(user_id), p256dh = VALUES(p256dh), auth = VALUES(auth)`,
+       ON CONFLICT (endpoint) DO UPDATE SET user_id = EXCLUDED.user_id, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth`,
       [req.user.id, endpoint, keys.p256dh, keys.auth]
     );
     res.status(201).json({ message: 'Subscribed to push notifications.' });
