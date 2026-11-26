@@ -10,7 +10,8 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navRef = useRef(null);
-  const [glide, setGlide] = useState({ left: 0, width: 0, ready: false });
+  const barRef = useRef(null);
+  const [glide, setGlide] = useState({ x: 0, ready: false });
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -19,7 +20,11 @@ function Navbar() {
   const close = () => setMenuOpen(false);
 
   useEffect(() => {
-    const updateScroll = () => setScrolled(window.scrollY > 12);
+    const updateScroll = () => {
+      setScrolled(window.scrollY > 12);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      if (barRef.current) barRef.current.style.setProperty('--sp', max > 0 ? Math.min(window.scrollY / max, 1).toFixed(4) : '0');
+    };
     updateScroll();
     window.addEventListener('scroll', updateScroll, { passive: true });
     return () => window.removeEventListener('scroll', updateScroll);
@@ -30,30 +35,38 @@ function Navbar() {
   useEffect(() => {
     const measure = () => {
       const el = navRef.current && navRef.current.querySelector('a.active');
-      if (el) setGlide({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
+      if (el) setGlide({ x: el.offsetLeft + el.offsetWidth / 2, ready: true });
       else setGlide(g => ({ ...g, ready: false }));
     };
     measure();
+    const t = setTimeout(measure, 350);
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    // The capsule changes width when it condenses on scroll, shifting the links.
+    const ro = typeof ResizeObserver !== 'undefined' && navRef.current ? new ResizeObserver(measure) : null;
+    if (ro) ro.observe(navRef.current);
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); if (ro) ro.disconnect(); };
   }, [location.pathname]);
+
+  const onMove = e => {
+    const el = barRef.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    el.style.setProperty('--my', `${e.clientY - r.top}px`);
+  };
   const handleLogout = () => { logout(); close(); navigate('/'); };
   const active = path => (path === '/blog' ? location.pathname.startsWith('/blog') : location.pathname === path) ? 'active' : '';
 
   return <header className={`navbar ${scrolled ? 'navbar-scrolled' : ''} ${menuOpen ? 'navbar-menu-open' : ''}`}>
-    <div className="navbar-container">
+    <div className="navbar-container" ref={barRef} onMouseMove={onMove}>
       <Link to="/" className="brand" onClick={close} aria-label="PlumbPro home">
-        <img src="/plumbpro-mark.svg" alt="" className="brand-mark" />
+        <span className="brand-mark-wrap"><img src="/plumbpro-mark.svg" alt="" className="brand-mark" /><i className="brand-drip" /></span>
         <span className="brand-word">Plumb<b>Pro</b><small>Service, made simpler.</small></span>
       </Link>
       <nav className={`nav-links ${menuOpen ? 'active' : ''}`} aria-label="Main navigation" ref={navRef}>
-        <span className="nav-glide" style={{ transform: `translateX(${glide.left}px)`, width: `${glide.width}px`, opacity: glide.ready ? 1 : 0 }} aria-hidden="true" />
-        <Link className={active('/')} to="/" onClick={close}>Home</Link>
-        <Link className={active('/services')} to="/services" onClick={close}>Services</Link>
-        <Link className={active('/about')} to="/about" onClick={close}>About</Link>
-        <Link className={active('/blog')} to="/blog" onClick={close}>Blog</Link>
-        <Link className={active('/book-plumber')} to="/book-plumber" onClick={close}>Book a Plumber</Link>
-        <Link className={active('/contact')} to="/contact" onClick={close}>Contact</Link>
+        <span className="nav-drop" style={{ transform: `translateX(${glide.x - 4}px)`, opacity: glide.ready ? 1 : 0 }} aria-hidden="true"><i key={location.pathname} /></span>
+        {[['/', 'Home'], ['/services', 'Services'], ['/about', 'About'], ['/blog', 'Blog'], ['/book-plumber', 'Book a Plumber'], ['/contact', 'Contact']].map(([to, label]) => (
+          <Link key={to} className={active(to)} to={to} onClick={close}><span className="nl-text"><span data-text={label}>{label}</span></span></Link>
+        ))}
         <div className="nav-mobile-actions">
           {user ? <>
             <Link to={dashboard} className="nav-outline" onClick={close}>Dashboard</Link>
