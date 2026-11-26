@@ -40,8 +40,9 @@ async function test() {
     console.error('Code:', error.code);
     console.error('Message:', error.message);
   } finally {
-    await client.end().catch(() => {});
+    await clientc.end().catch(() => {});
   }
 }
 
 test();
+c

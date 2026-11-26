@@ -42,3 +42,15 @@
   .dash-mobile-notif .notif-panel{position:static;box-shadow:none;border:0;margin-top:8px;width:100%;max-height:280px}
   .dash-topbar-tabs{padding:0 12px 4px}
 }
+
+/* Animated dashboard navigation and content feedback */
+.dash-topbar{box-shadow:0 8px 28px rgba(8,35,30,.035);transition:box-shadow .25s ease,background .25s ease}
+.dash-topbar-tabs{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dash-topbar-tabs button{border-radius:11px 11px 0 0;transition:color .2s ease,background .2s ease,transform .2s ease}
+.dash-topbar-tabs button:hover{background:var(--surface-2);color:var(--text);transform:translateY(-1px)}
+.dash-topbar-tabs button.active{background:color-mix(in srgb,var(--primary) 8%,var(--surface));color:var(--primary)}
+.dash-topbar-tabs button.active::after{height:3px;left:20%;right:20%;animation:tabIndicator .28s cubic-bezier(.2,.8,.2,1) both}
+.dash-topbar-tabs button em{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+@keyframes tabIndicator{from{transform:scaleX(.35);opacity:.4}to{transform:scaleX(1);opacity:1}}
+.dash-topbar-brand img{transition:transform .35s ease,filter .35s ease}.dash-topbar-brand:hover img{transform:rotate(-7deg) scale(1.06);filter:drop-shadow(0 5px 10px color-mix(in srgb,var(--primary) 30%,transparent))}
+@media(prefers-reduced-motion:reduce){.dash-topbar,.dash-topbar-tabs button,.dash-topbar-brand img{transition:none}.dash-topbar-tabs button.active::after{animation:none}}

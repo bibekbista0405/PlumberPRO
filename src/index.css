@@ -145,3 +145,20 @@ button:disabled{opacity:.6;cursor:not-allowed}
 
 /* dashboard "app mode" — separate chrome from the public marketing site */
 .dashboard-app{min-height:100vh;background:var(--bg);display:flex;flex-direction:column;flex:1}
+
+/* Motion system: soft, directional transitions that keep the interface calm. */
+.route-transition{transform-origin:50% 0;animation:pageReveal .52s cubic-bezier(.2,.75,.25,1) both;will-change:opacity,transform,filter}
+@keyframes pageReveal{0%{opacity:0;transform:translate3d(0,18px,0) scale(.992);filter:blur(5px)}65%{opacity:1;filter:blur(0)}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+.admin-tab-content,.dash-section-page{animation:tabReveal .38s cubic-bezier(.2,.8,.25,1) both;transform-origin:top center}
+.customer-dashboard>section,.plumber-dashboard>section{animation:tabReveal .42s cubic-bezier(.2,.8,.25,1) both}
+@keyframes tabReveal{from{opacity:0;transform:translateY(12px) scale(.995);filter:blur(3px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+/* Give interactive surfaces a consistent tactile response. */
+button:not(:disabled),a,.table-btn{ -webkit-tap-highlight-color:transparent }
+button:not(:disabled){transition-property:transform,box-shadow,border-color,background-color,color;transition-duration:.2s;transition-timing-function:ease}
+button:not(:disabled):active{transform:scale(.985)}
+[data-reveal]{transition:opacity .72s cubic-bezier(.2,.7,.2,1),transform .72s cubic-bezier(.2,.7,.2,1),filter .72s ease;filter:blur(2px)}
+[data-reveal].is-visible{filter:blur(0)}
+.why-card,.service-card,.testimonial-card,.service-tile,.feature-card{transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease,border-color .28s ease}
+.why-card:hover,.service-card:hover,.testimonial-card:hover,.service-tile:hover,.feature-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 55%,transparent);outline-offset:3px;border-radius:6px}
+@media(prefers-reduced-motion:reduce){.route-transition,.admin-tab-content,.dash-section-page,.customer-dashboard>section,.plumber-dashboard>section{animation:none!important;filter:none!important;transform:none!important} [data-reveal]{filter:none!important}}

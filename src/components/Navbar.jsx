@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/Navbar.css';
 import { useAuth } from '../context/AuthContext';
@@ -8,22 +8,32 @@ import Icon from './Icon';
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const dashboard = user?.role === 'admin' ? '/admin-dashboard' : user?.role === 'plumber' ? '/plumber-dashboard' : '/customer-dashboard';
   const close = () => setMenuOpen(false);
+
+  useEffect(() => {
+    const updateScroll = () => setScrolled(window.scrollY > 12);
+    updateScroll();
+    window.addEventListener('scroll', updateScroll, { passive: true });
+    return () => window.removeEventListener('scroll', updateScroll);
+  }, []);
+
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
   const handleLogout = () => { logout(); close(); navigate('/'); };
   const active = path => (path === '/blog' ? location.pathname.startsWith('/blog') : location.pathname === path) ? 'active' : '';
 
-  return <header className="navbar">
+  return <header className={`navbar ${scrolled ? 'navbar-scrolled' : ''} ${menuOpen ? 'navbar-menu-open' : ''}`}>
     <div className="navbar-container">
       <Link to="/" className="brand" onClick={close} aria-label="PlumbPro home">
         <img src="/plumbpro-mark.svg" alt="" className="brand-mark" />
-        <span className="brand-word">Plumb<b>Pro</b></span>
+        <span className="brand-word">Plumb<b>Pro</b><small>Service, made simpler.</small></span>
       </Link>
-      <nav className={`nav-links ${menuOpen ? 'active' : ''}`}>
+      <nav className={`nav-links ${menuOpen ? 'active' : ''}`} aria-label="Main navigation">
         <Link className={active('/')} to="/" onClick={close}>Home</Link>
         <Link className={active('/services')} to="/services" onClick={close}>Services</Link>
         <Link className={active('/about')} to="/about" onClick={close}>About</Link>
@@ -53,7 +63,7 @@ function Navbar() {
           <Link to="/login" className="nav-primary" onClick={close}>Get Started</Link>
         </>}
       </div>
-      <button className={`hamburger ${menuOpen ? 'active' : ''}`} aria-label="Toggle navigation" onClick={() => setMenuOpen(v => !v)}><span/><span/><span/></button>
+      <button className={`hamburger ${menuOpen ? 'active' : ''}`} aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} onClick={() => setMenuOpen(v => !v)}><span/><span/><span/></button>
     </div>
   </header>;
 }
