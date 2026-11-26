@@ -5,14 +5,36 @@ const backendRoot = path.resolve(__dirname, '../..');
 require('dotenv').config({ path: path.join(backendRoot, '.env') });
 
 const sslEnabled = String(process.env.PGSSL ?? 'true').toLowerCase() !== 'false';
-const caPath = process.env.PGSSL_CA_FILE
-  ? path.resolve(backendRoot, process.env.PGSSL_CA_FILE)
-  : null;
-const ssl = sslEnabled
-  ? (caPath && fs.existsSync(caPath)
-      ? { rejectUnauthorized: true, ca: fs.readFileSync(caPath, 'utf8') }
-      : { rejectUnauthorized: String(process.env.PGSSL_REJECT_UNAUTHORIZED ?? 'false').toLowerCase() === 'true' })
-  : false;
+const rejectUnauthorized = String(process.env.PGSSL_REJECT_UNAUTHORIZED ?? 'true').toLowerCase() !== 'false';
+// Resolve the CA relative to the backend package, not Vercel's process.cwd().
+// Default to the Aiven CA shipped with this project so production cannot
+// silently fall back to Node's public system trust store when the file is missing.
+const caPath = path.resolve(
+  backendRoot,
+  process.env.PGSSL_CA_FILE || './certs/aiven-ca.pem'
+);
+
+let ssl = false;
+if (sslEnabled) {
+  if (rejectUnauthorized) {
+    if (!fs.existsSync(caPath)) {
+      throw new Error(
+        `PostgreSQL SSL CA certificate was not found at ${caPath}. ` +
+        'Ensure backend/certs/aiven-ca.pem is committed and deployed, or set PGSSL_CA_FILE to its path.'
+      );
+    }
+    const ca = fs.readFileSync(caPath, 'utf8');
+    if (!ca.includes('-----BEGIN CERTIFICATE-----')) {
+      throw new Error(`PostgreSQL SSL CA file is not a valid PEM certificate: ${caPath}`);
+    }
+    console.info(`PostgreSQL SSL CA certificate loaded from ${caPath}`);
+    ssl = { rejectUnauthorized: true, ca };
+  } else {
+    // Explicit opt-out is retained for local diagnostics only. Production
+    // should keep PGSSL_REJECT_UNAUTHORIZED=true and provide the Aiven CA.
+    ssl = { rejectUnauthorized: false };
+  }
+}
 
 const pgPool = new Pool({
   host: process.env.PGHOST,

@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const { testConnection } = require('./config/db');
 const authRoutes = require('./routes/auth');
@@ -99,7 +99,7 @@ function rateLimitKey(req) {
       if (decoded && decoded.id) return `user:${decoded.id}`;
     } catch { /* fall through to IP-based keying below */ }
   }
-  return req.ip;
+  return ipKeyGenerator(req.ip || 'unknown');
 }
 
 app.use(rateLimit({
