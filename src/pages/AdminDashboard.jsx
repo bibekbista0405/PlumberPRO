@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../styles/AdminDashboard.css';
 
@@ -423,6 +423,19 @@ function AdminDashboard() {
 // ---------------------------------------------------------------------------
 
 function Sidebar({ activeTab, onTabChange, supportBadge, pendingFeedbackCount, user, isDark, onToggleTheme, onRefresh, onLogout }) {
+  const itemRefs = useRef({});
+  const [glide, setGlide] = useState({ top: 0, height: 0, ready: false });
+
+  useEffect(() => {
+    const measure = () => {
+      const el = itemRefs.current[activeTab];
+      if (el) setGlide({ top: el.offsetTop, height: el.offsetHeight, ready: true });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [activeTab]);
+
   return (
     <aside className="sidebar">
       <div className="admin-brand">
@@ -436,8 +449,9 @@ function Sidebar({ activeTab, onTabChange, supportBadge, pendingFeedbackCount, u
       </div>
 
       <nav>
+        <span className="sidebar-glide" style={{ transform: `translateY(${glide.top}px)`, height: `${glide.height}px`, opacity: glide.ready ? 1 : 0 }} aria-hidden="true" />
         {TABS.map(({ key, label, icon }) => (
-          <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => onTabChange(key)}>
+          <button key={key} ref={el => { itemRefs.current[key] = el; }} className={activeTab === key ? 'active' : ''} onClick={() => onTabChange(key)}>
             <Icon name={icon} size={16} />
             {label}
             {key === 'support' && supportBadge > 0 && <em>{supportBadge}</em>}

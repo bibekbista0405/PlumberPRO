@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -16,8 +16,20 @@ function DashboardTopbar({ roleLabel, tabs, activeTab, onTabChange, unreadMessag
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const tabRefs = useRef({});
+  const [pill, setPill] = useState({ left: 0, width: 0, ready: false });
 
   const handleLogout = () => { logout(); navigate('/'); };
+
+  useEffect(() => {
+    const measure = () => {
+      const el = tabRefs.current[activeTab];
+      if (el) setPill({ left: el.offsetLeft + 20, width: Math.max(el.offsetWidth - 40, 0), ready: true });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [activeTab, tabs]);
 
   return (
     <header className="dash-topbar">
@@ -44,8 +56,9 @@ function DashboardTopbar({ roleLabel, tabs, activeTab, onTabChange, unreadMessag
 
       {tabs && (
         <nav className="dash-topbar-tabs">
+          <span className="dash-tab-pill" style={{ transform: `translateX(${pill.left}px)`, width: `${pill.width}px`, opacity: pill.ready ? 1 : 0 }} aria-hidden="true" />
           {tabs.map(([key, label, icon]) => (
-            <button key={key} className={activeTab === key ? 'active' : ''} onClick={() => onTabChange(key)}>
+            <button key={key} ref={el => { tabRefs.current[key] = el; }} className={activeTab === key ? 'active' : ''} onClick={() => onTabChange(key)}>
               <Icon name={icon} size={14} /> {label}
               {key === 'messages' && unreadMessages > 0 && <em>{unreadMessages > 9 ? '9+' : unreadMessages}</em>}
             </button>

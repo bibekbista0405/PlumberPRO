@@ -61,7 +61,16 @@
 .admin-brand strong { font-size: .9rem; }
 .admin-brand span { font-size: .68rem; color: var(--muted); margin-top: 3px; }
 
-.sidebar nav { display: grid; gap: 4px; }
+.sidebar nav { display: grid; gap: 4px; position: relative; }
+.sidebar-glide {
+  position: absolute; left: 0; top: 0; width: 100%;
+  border-radius: 11px;
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 var(--primary);
+  transition: transform .36s cubic-bezier(.65,0,.35,1), height .36s cubic-bezier(.65,0,.35,1), opacity .2s ease;
+  pointer-events: none;
+}
+.sidebar nav button { z-index: 1; }
 .sidebar nav button {
   position: relative;
   display: flex;
@@ -77,8 +86,8 @@
   font-weight: 700;
   transition: background .15s ease, color .15s ease;
 }
-.sidebar nav button:hover, .sidebar nav button.active { background: var(--surface-2); color: var(--text); }
-.sidebar nav button.active { box-shadow: inset 3px 0 var(--primary); }
+.sidebar nav button:hover { background: var(--surface-2); color: var(--text); }
+.sidebar nav button.active { background: transparent; color: var(--text); }
 .sidebar nav em {
   margin-left: auto;
   background: var(--primary);
@@ -469,6 +478,8 @@
 
   .sidebar { position: static; width: 100%; height: auto; padding: 12px; }
   .sidebar nav { display: flex; overflow-x: auto; }
+  .sidebar-glide { display: none; }
+  .sidebar nav button.active { background: var(--surface-2); box-shadow: inset 3px 0 var(--primary); }
   .sidebar nav button { white-space: nowrap; width: auto; }
 
   .sidebar-foot { flex-direction: row; flex-wrap: wrap; align-items: center; padding-top: 12px; gap: 8px; }
@@ -493,3 +504,5 @@
   .admin-tools { flex-direction: column; align-items: stretch; }
   .refresh-btn { width: 100%; justify-content: center; }
 }
+
+@media (prefers-reduced-motion: reduce) { .sidebar-glide { transition: none; } }

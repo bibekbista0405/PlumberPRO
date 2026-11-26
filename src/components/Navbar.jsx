@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/Navbar.css';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,8 @@ import Icon from './Icon';
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef(null);
+  const [glide, setGlide] = useState({ left: 0, width: 0, ready: false });
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -24,6 +26,17 @@ function Navbar() {
   }, []);
 
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+
+  useEffect(() => {
+    const measure = () => {
+      const el = navRef.current && navRef.current.querySelector('a.active');
+      if (el) setGlide({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
+      else setGlide(g => ({ ...g, ready: false }));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [location.pathname]);
   const handleLogout = () => { logout(); close(); navigate('/'); };
   const active = path => (path === '/blog' ? location.pathname.startsWith('/blog') : location.pathname === path) ? 'active' : '';
 
@@ -33,7 +46,8 @@ function Navbar() {
         <img src="/plumbpro-mark.svg" alt="" className="brand-mark" />
         <span className="brand-word">Plumb<b>Pro</b><small>Service, made simpler.</small></span>
       </Link>
-      <nav className={`nav-links ${menuOpen ? 'active' : ''}`} aria-label="Main navigation">
+      <nav className={`nav-links ${menuOpen ? 'active' : ''}`} aria-label="Main navigation" ref={navRef}>
+        <span className="nav-glide" style={{ transform: `translateX(${glide.left}px)`, width: `${glide.width}px`, opacity: glide.ready ? 1 : 0 }} aria-hidden="true" />
         <Link className={active('/')} to="/" onClick={close}>Home</Link>
         <Link className={active('/services')} to="/services" onClick={close}>Services</Link>
         <Link className={active('/about')} to="/about" onClick={close}>About</Link>

@@ -1,10 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from './Icon';
 import '../styles/Footer.css';
 
 function Footer() {
+  const [showTop, setShowTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 520);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const scrollTop = () => {
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  };
+
   return <footer className="footer">
+    <button type="button" className={`back-to-top ${showTop ? 'visible' : ''}`} onClick={scrollTop} aria-label="Back to top" tabIndex={showTop ? 0 : -1}><Icon name="arrowUp" size={18}/></button>
     <div className="footer-cta-wrap"><div className="footer-cta"><div className="footer-cta-orbit footer-cta-orbit-one"/><div className="footer-cta-orbit footer-cta-orbit-two"/><div className="footer-cta-copy"><span className="footer-kicker">THE PLUMBPRO PROMISE</span><h2>Good service starts with a better connection.</h2><p>Find the right plumbing help, make a booking, and keep the details in one place.</p></div><Link to="/book-plumber" className="footer-cta-button">Find your plumber <Icon name="arrowUpRight" size={17}/></Link></div></div>
     <div className="footer-container">
       <div className="footer-brand">

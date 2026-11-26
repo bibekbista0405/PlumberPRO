@@ -162,3 +162,9 @@ button:not(:disabled):active{transform:scale(.985)}
 .why-card:hover,.service-card:hover,.testimonial-card:hover,.service-tile:hover,.feature-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
 :focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 55%,transparent);outline-offset:3px;border-radius:6px}
 @media(prefers-reduced-motion:reduce){.route-transition,.admin-tab-content,.dash-section-page,.customer-dashboard>section,.plumber-dashboard>section{animation:none!important;filter:none!important;transform:none!important} [data-reveal]{filter:none!important}}
+
+/* Shine sweep on primary calls to action */
+.btn-primary,.nav-primary,.footer-cta-button{position:relative;overflow:hidden;isolation:isolate}
+.btn-primary::after,.nav-primary::after,.footer-cta-button::after{content:"";position:absolute;top:0;bottom:0;left:-70%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-20deg);transition:left .65s ease;pointer-events:none;z-index:-1}
+.btn-primary:hover::after,.nav-primary:hover::after,.footer-cta-button:hover::after{left:130%}
+@media(prefers-reduced-motion:reduce){.btn-primary::after,.nav-primary::after,.footer-cta-button::after{display:none}}

@@ -23,6 +23,7 @@ const paths = {
   mail: 'M4 6h16v12H4Z|M4 7l8 6 8-6',
   clock: 'CIRCLE:12,12,8.5|M12 8v4.3l3 2',
   arrowUpRight: 'M8 16L16 8|M9 8h7v7',
+  arrowUp: 'M12 19V5|M5 12l7-7 7 7',
   shield: 'M12 3l7 3v6c0 4.6-3 8-7 9-4-1-7-4.4-7-9V6Z',
   shieldCheck: 'M12 3l7 3v6c0 4.6-3 8-7 9-4-1-7-4.4-7-9V6Z|M9 12.3l2 2 4-4.3',
   plus: 'M12 5v14|M5 12h14',
