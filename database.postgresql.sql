@@ -176,6 +176,13 @@ CREATE TABLE IF NOT EXISTS platform_feedback (
   CONSTRAINT uq_feedback_user UNIQUE (user_id)
 );
 
+CREATE TABLE IF NOT EXISTS site_settings (
+  id SERIAL PRIMARY KEY,
+  setting_key VARCHAR(100) NOT NULL UNIQUE,
+  setting_value TEXT NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 CREATE INDEX IF NOT EXISTS idx_users_status ON users (status);
 CREATE INDEX IF NOT EXISTS idx_plumber_location ON plumber_profiles (location_name);

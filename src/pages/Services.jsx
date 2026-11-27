@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSettings } from '../context/SettingsContext';
 import { Link } from 'react-router-dom';
 import '../styles/ServicesPage.css';
 import { getServices } from '../api/serviceApi';
@@ -6,6 +7,7 @@ import ServiceIcon from '../components/ServiceIcon';
 import { useSEO } from '../hooks/useSEO';
 
 function Services() {
+  const { showServicePrices } = useSettings();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => { getServices().then(d => setServices(d.services)).catch(console.error).finally(() => setLoading(false)); }, []);
@@ -24,8 +26,8 @@ function Services() {
             <div className="icon"><ServiceIcon name={s.name} size={26} /></div>
             <h3>{s.name}</h3>
             <p>{s.description}</p>
-            <strong>{s.is_negotiable ? 'Negotiable at the job' : `NPR ${Number(s.price).toLocaleString()}`}</strong>
-            {s.is_negotiable && <span className="negotiable-note">Price is discussed and agreed with your plumber once they see the job.</span>}
+            {showServicePrices && <strong>{s.is_negotiable ? 'Negotiable at the job' : `NPR ${Number(s.price).toLocaleString()}`}</strong>}
+            {showServicePrices && s.is_negotiable && <span className="negotiable-note">Price is discussed and agreed with your plumber once they see the job.</span>}
             <Link to="/book-plumber">Book Service</Link>
           </div>
         ))}

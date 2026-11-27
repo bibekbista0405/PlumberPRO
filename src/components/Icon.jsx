@@ -40,6 +40,8 @@ const paths = {
   camera: 'M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z|CIRCLE:12,13,3.4',
   send: 'M4 12L20 4l-6 16-3-7-7-1Z',
   chart: 'M4 20V10|M10 20V4|M16 20v-7|M4 20h16',
+  menu: 'M4 7h16|M4 12h16|M4 17h16',
+  panel: 'M4 5h16v14H4Z|M9 5v14',
 };
 
 function Icon({ name, size = 18, strokeWidth = 1.9, filled = false, className = '', ...rest }) {

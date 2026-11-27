@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSettings } from '../context/SettingsContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/BookPlumber.css';
 import { getServices } from '../api/serviceApi';
@@ -20,6 +21,7 @@ function getLocalDateValue(date = new Date()) {
 }
 
 function BookPlumber() {
+  const { showServicePrices } = useSettings();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -125,7 +127,7 @@ function BookPlumber() {
           <label>Service
             <select name="service_id" value={booking.service_id} onChange={change} required>
               <option value="">Choose a service</option>
-              {services.map(s => <option key={s.id} value={s.id}>{s.name} · {s.is_negotiable ? 'Negotiable at the job' : `NPR ${Number(s.price || 0).toLocaleString()}`}</option>)}
+              {services.map(s => <option key={s.id} value={s.id}>{s.name}{showServicePrices ? ` · ${s.is_negotiable ? 'Negotiable at the job' : `NPR ${Number(s.price || 0).toLocaleString()}`}` : ''}</option>)}
             </select>
           </label>
           <label>Preferred plumber

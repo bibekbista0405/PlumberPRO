@@ -19,6 +19,7 @@ const reportRoutes = require('./routes/reports');
 const messageRoutes = require('./routes/messages');
 const pushRoutes = require('./routes/push');
 const feedbackRoutes = require('./routes/feedback');
+const settingsRoutes = require('./routes/settings');
 const { notFound, errorHandler } = require('./middleware/error');
 const { uploadRoot } = require('./middleware/upload');
 
@@ -148,6 +149,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // In local/combined deployments, optionally serve the React build from this
 // Express server (useful for a single local tunnel). On Vercel the frontend is

@@ -20,6 +20,7 @@ import BlogPost from './pages/BlogPost';
 import PlumberProfile from './pages/PlumberProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ConfirmProvider } from './context/ConfirmContext';
+import { SettingsProvider } from './context/SettingsContext';
 import WelcomeBanner from './components/WelcomeBanner';
 import PageTransitionOverlay from './components/PageTransitionOverlay';
 import AnnouncementBar from './components/AnnouncementBar';
@@ -46,5 +47,5 @@ useEffect(() => {
   return () => observer.disconnect();
 }, [location.pathname]);
 return <><PageTransitionOverlay/>{!dashboardRoute&&<AnnouncementBar/>}{!dashboardRoute&&<Navbar/>}{!dashboardRoute&&location.pathname==='/'&&<WelcomeBanner/>}<div className="route-transition" key={`${location.pathname}${location.search}`}><Routes location={location}><Route path="/" element={<Home/>}/><Route path="/services" element={<Services/>}/><Route path="/about" element={<About/>}/><Route path="/contact" element={<Contact/>}/><Route path="/blog" element={<Blog/>}/><Route path="/blog/:slug" element={<BlogPost/>}/><Route path="/plumbers/:id" element={<PlumberProfile/>}/><Route path="/book-plumber" element={<BookPlumber/>}/><Route path="/login" element={<LoginRegister/>}/><Route path="/terms" element={<Terms/>}/><Route path="/privacy" element={<Privacy/>}/><Route path="/legal" element={<Legal/>}/><Route path="/cancellation-policy" element={<CancellationPolicy/>}/><Route path="/customer-dashboard" element={<ProtectedRoute roles={['customer']}><CustomerDashboard/></ProtectedRoute>}/><Route path="/plumber-dashboard" element={<ProtectedRoute roles={['plumber']}><PlumberDashboard/></ProtectedRoute>}/><Route path="/admin-dashboard" element={<ProtectedRoute roles={['admin']}><AdminDashboard/></ProtectedRoute>}/></Routes></div>{!dashboardRoute&&location.pathname!=='/login'&&<Footer/>}</>}
-function App(){return <BrowserRouter><ConfirmProvider><Layout/></ConfirmProvider></BrowserRouter>}
+function App(){return <BrowserRouter><SettingsProvider><ConfirmProvider><Layout/></ConfirmProvider></SettingsProvider></BrowserRouter>}
 export default App;

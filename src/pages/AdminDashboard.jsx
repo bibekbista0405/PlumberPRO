@@ -17,6 +17,7 @@ import {
 import { getAllServices, createService, updateService, deleteService } from '../api/serviceApi';
 import { getReports, updateReport, REPORT_REASONS } from '../api/reportApi';
 import { getAllFeedback, updateFeedbackStatus } from '../api/feedbackApi';
+import { updateSettings } from '../api/settingsApi';
 
 import ServiceIcon from '../components/ServiceIcon';
 import Icon from '../components/Icon';
@@ -27,6 +28,7 @@ import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useConfirm } from '../context/ConfirmContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useSettings } from '../context/SettingsContext';
 
 // ---------------------------------------------------------------------------
 // Static config
@@ -41,7 +43,31 @@ const TABS = [
   { key: 'support', label: 'Support', icon: 'shield' },
   { key: 'feedback', label: 'Feedback', icon: 'star' },
   { key: 'analytics', label: 'Analytics', icon: 'chart' },
+  { key: 'settings', label: 'Settings', icon: 'settings' },
 ];
+
+// Sidebar grouping: related tools sit together so the nav reads as a map of
+// the job (what's happening, who is involved, what the site says).
+const NAV_GROUPS = [
+  { label: 'Workspace', items: ['overview', 'analytics'] },
+  { label: 'Operations', items: ['bookings', 'plumbers', 'users', 'support'] },
+  { label: 'Content', items: ['services', 'feedback'] },
+  { label: 'System', items: ['settings'] },
+];
+const TAB_BY_KEY = Object.fromEntries(TABS.map((t) => [t.key, t]));
+const GROUP_OF = Object.fromEntries(NAV_GROUPS.flatMap((g) => g.items.map((k) => [k, g.label])));
+const SEARCHABLE_TABS = ['bookings', 'users', 'plumbers', 'support', 'feedback'];
+const TAB_META = {
+  overview: 'A live snapshot of bookings, people and support activity.',
+  bookings: 'Assign plumbers and move every job through its stages.',
+  users: 'Customer, plumber and admin accounts in one place.',
+  plumbers: 'Review profiles and decide who gets the verified badge.',
+  services: 'The service catalogue customers book from.',
+  support: 'Reports and contact messages that need a response.',
+  feedback: 'Moderate what customers and plumbers say about the platform.',
+  analytics: 'Trends across bookings and activity over time.',
+  settings: 'Site-wide switches that change what visitors see.',
+};
 
 const BOOKING_STATUSES = [
   'pending', 'assigned', 'confirmed', 'on_the_way', 'arrived',
@@ -70,6 +96,11 @@ function AdminDashboard() {
   const navigate = useNavigate();
 
   const [tab, setTab] = useState('overview');
+  const [navOpen, setNavOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return window.localStorage.getItem('plumbpro:admin-collapsed') === '1'; } catch { return false; }
+  });
   const [query, setQuery] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -311,12 +342,38 @@ function AdminDashboard() {
     setTab(key);
     setQuery('');
     setUserRoleFilter('all');
+    setNavOpen(false);
   };
+
+  const toggleCollapsed = () => {
+    setCollapsed((v) => {
+      try { window.localStorage.setItem('plumbpro:admin-collapsed', v ? '0' : '1'); } catch { /* storage unavailable */ }
+      return !v;
+    });
+  };
+
+  // Ctrl/Cmd+K opens quick jump from anywhere in the console; Escape closes overlays.
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen((v) => !v); }
+      else if (e.key === 'Escape') setNavOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const commands = [
+    ...TABS.map((t) => ({ id: `go-${t.key}`, label: t.label, group: 'Go to', hint: GROUP_OF[t.key], icon: t.icon, keywords: TAB_META[t.key], run: () => switchTab(t.key) })),
+    { id: 'refresh', label: 'Refresh data', group: 'Actions', icon: 'refresh', run: () => load() },
+    { id: 'theme', label: isDark ? 'Switch to light mode' : 'Switch to dark mode', group: 'Actions', icon: isDark ? 'sun' : 'moon', keywords: 'theme appearance', run: toggleTheme },
+    { id: 'site', label: 'Back to website', group: 'Actions', icon: 'arrowUpRight', run: () => navigate('/') },
+    { id: 'logout', label: 'Log out', group: 'Actions', icon: 'logout', run: handleLogout },
+  ];
 
   // -- Render --------------------------------------------------------------
 
   return (
-    <div className="admin-container">
+    <div className={`admin-container ${collapsed ? 'rail' : ''}`}>
       <Sidebar
         activeTab={tab}
         onTabChange={switchTab}
@@ -327,17 +384,27 @@ function AdminDashboard() {
         onToggleTheme={toggleTheme}
         onRefresh={() => load()}
         onLogout={handleLogout}
+        collapsed={collapsed}
+        onToggleCollapse={toggleCollapsed}
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
       />
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} />
 
       <main className="admin-main">
         <AdminHeader
           title={activeTabLabel}
-          showSearch={tab !== 'overview'}
+          group={GROUP_OF[tab]}
+          subtitle={TAB_META[tab]}
+          showSearch={SEARCHABLE_TABS.includes(tab)}
           query={query}
           onQueryChange={setQuery}
           onClearQuery={() => setQuery('')}
           onRefresh={() => load()}
           loading={loading}
+          onOpenNav={() => setNavOpen(true)}
+          onOpenPalette={() => setPaletteOpen(true)}
         />
 
         {error && <div className="form-error">{error}</div>}
@@ -409,6 +476,8 @@ function AdminDashboard() {
             {tab === 'analytics' && (
               <AnalyticsTab data={analyticsData} range={analyticsRange} onRangeChange={setAnalyticsRange} />
             )}
+
+            {tab === 'settings' && <SettingsTab />}
           </div>
         )}
 
@@ -422,7 +491,7 @@ function AdminDashboard() {
 // Sidebar
 // ---------------------------------------------------------------------------
 
-function Sidebar({ activeTab, onTabChange, supportBadge, pendingFeedbackCount, user, isDark, onToggleTheme, onRefresh, onLogout }) {
+function Sidebar({ activeTab, onTabChange, supportBadge, pendingFeedbackCount, user, isDark, onToggleTheme, onRefresh, onLogout, collapsed, onToggleCollapse, open, onClose }) {
   const itemRefs = useRef({});
   const [glide, setGlide] = useState({ top: 0, height: 0, ready: false });
 
@@ -432,62 +501,163 @@ function Sidebar({ activeTab, onTabChange, supportBadge, pendingFeedbackCount, u
       if (el) setGlide({ top: el.offsetTop, height: el.offsetHeight, ready: true });
     };
     measure();
+    const t = setTimeout(measure, 320);
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [activeTab]);
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
+  }, [activeTab, collapsed, open]);
+
+  const badgeFor = (key) => (key === 'support' ? supportBadge : key === 'feedback' ? pendingFeedbackCount : 0);
 
   return (
-    <aside className="sidebar">
-      <div className="admin-brand">
-        <div className="admin-logo-surface">
-          <img src="/plumbpro-mark.svg" alt="PlumbPro logo" />
-        </div>
-        <div>
-          <strong>Admin Console</strong>
-          <span>Operations workspace</span>
-        </div>
-      </div>
-
-      <nav>
-        <span className="sidebar-glide" style={{ transform: `translateY(${glide.top}px)`, height: `${glide.height}px`, opacity: glide.ready ? 1 : 0 }} aria-hidden="true" />
-        {TABS.map(({ key, label, icon }) => (
-          <button key={key} ref={el => { itemRefs.current[key] = el; }} className={activeTab === key ? 'active' : ''} onClick={() => onTabChange(key)}>
-            <Icon name={icon} size={16} />
-            {label}
-            {key === 'support' && supportBadge > 0 && <em>{supportBadge}</em>}
-            {key === 'feedback' && pendingFeedbackCount > 0 && <em>{pendingFeedbackCount}</em>}
-          </button>
-        ))}
-      </nav>
-
-      <div className="sidebar-foot">
-        <div className="sidebar-account">
-          <div className="sidebar-account-chip">{(user?.name || 'A').charAt(0).toUpperCase()}</div>
-          <div>
-            <strong>{user?.name}</strong>
-            <span>{user?.email}</span>
+    <>
+      <div className={`sidebar-backdrop ${open ? 'show' : ''}`} onClick={onClose} aria-hidden="true" />
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${open ? 'open' : ''}`} aria-label="Admin navigation">
+        <div className="admin-brand">
+          <div className="admin-logo-surface">
+            <img src="/plumbpro-mark.svg" alt="PlumbPro logo" />
           </div>
-          <NotificationBell />
+          <div className="admin-brand-text">
+            <strong>Admin Console</strong>
+            <span>Operations workspace</span>
+          </div>
+          <button type="button" className="sidebar-collapse" onClick={onToggleCollapse} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            <Icon name="panel" size={16} />
+          </button>
+          <button type="button" className="sidebar-close" onClick={onClose} aria-label="Close navigation">
+            <Icon name="close" size={16} />
+          </button>
         </div>
 
-        <div className="sidebar-icon-row">
-          <button onClick={onToggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}>
-            <Icon name={isDark ? 'sun' : 'moon'} size={14} />
-          </button>
-          <button onClick={onRefresh} title="Refresh data">
-            <Icon name="refresh" size={14} />
+        <nav aria-label="Admin sections">
+          <span className="sidebar-glide" style={{ transform: `translateY(${glide.top}px)`, height: `${glide.height}px`, opacity: glide.ready ? 1 : 0 }} aria-hidden="true" />
+          {NAV_GROUPS.map((group) => (
+            <div className="nav-group" key={group.label}>
+              <span className="nav-group-label">{group.label}</span>
+              {group.items.map((key) => {
+                const { label, icon } = TAB_BY_KEY[key];
+                const badge = badgeFor(key);
+                return (
+                  <button
+                    key={key}
+                    ref={(el) => { itemRefs.current[key] = el; }}
+                    className={activeTab === key ? 'active' : ''}
+                    onClick={() => onTabChange(key)}
+                    title={collapsed ? label : undefined}
+                    aria-current={activeTab === key ? 'page' : undefined}
+                  >
+                    <Icon name={icon} size={16} />
+                    <span className="nav-label">{label}</span>
+                    {badge > 0 && <em>{badge}</em>}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        <div className="sidebar-foot">
+          <div className="sidebar-account">
+            <div className="sidebar-account-chip">{(user?.name || 'A').charAt(0).toUpperCase()}</div>
+            <div className="sidebar-account-text">
+              <strong>{user?.name}</strong>
+              <span>{user?.email}</span>
+            </div>
+            <NotificationBell />
+          </div>
+
+          <div className="sidebar-icon-row">
+            <button onClick={onToggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}>
+              <Icon name={isDark ? 'sun' : 'moon'} size={14} />
+            </button>
+            <button onClick={onRefresh} title="Refresh data">
+              <Icon name="refresh" size={14} />
+            </button>
+          </div>
+
+          <Link to="/" className="sidebar-back-link" title="Back to website">
+            <Icon name="chevronRight" size={13} className="flip" /> <span>Back to website</span>
+          </Link>
+
+          <button className="sidebar-logout" onClick={onLogout} title="Logout">
+            <Icon name="logout" size={14} /> <span>Logout</span>
           </button>
         </div>
+      </aside>
+    </>
+  );
+}
 
-        <Link to="/" className="sidebar-back-link">
-          <Icon name="chevronRight" size={13} className="flip" /> Back to website
-        </Link>
+// ---------------------------------------------------------------------------
+// Quick jump (Ctrl/Cmd + K)
+// ---------------------------------------------------------------------------
 
-        <button className="sidebar-logout" onClick={onLogout}>
-          <Icon name="logout" size={14} /> Logout
-        </button>
+function CommandPalette({ open, onClose, commands }) {
+  const [q, setQ] = useState('');
+  const [index, setIndex] = useState(0);
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    setQ('');
+    setIndex(0);
+    const t = setTimeout(() => inputRef.current && inputRef.current.focus(), 30);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  const results = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return commands;
+    const byLabel = commands.filter((c) => c.label.toLowerCase().includes(term));
+    const byOther = commands.filter((c) => !byLabel.includes(c) && `${c.group} ${c.hint || ''} ${c.keywords || ''}`.toLowerCase().includes(term));
+    return [...byLabel, ...byOther];
+  }, [q, commands]);
+
+  useEffect(() => { setIndex(0); }, [q]);
+  useEffect(() => {
+    const el = listRef.current && listRef.current.querySelector('[data-active="true"]');
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+  }, [index, results]);
+
+  if (!open) return null;
+
+  const run = (cmd) => { if (!cmd) return; onClose(); cmd.run(); };
+  const onKeyDown = (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setIndex((i) => (results.length ? (i + 1) % results.length : 0)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setIndex((i) => (results.length ? (i - 1 + results.length) % results.length : 0)); }
+    else if (e.key === 'Enter') { e.preventDefault(); run(results[index]); }
+    else if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+  };
+
+  let lastGroup = null;
+  return (
+    <div className="palette-backdrop" onMouseDown={onClose}>
+      <div className="palette" role="dialog" aria-modal="true" aria-label="Quick jump" onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKeyDown}>
+        <div className="palette-input">
+          <Icon name="search" size={17} />
+          <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Jump to a section or run an action…" aria-label="Search commands" />
+          <kbd>Esc</kbd>
+        </div>
+        <div className="palette-list" ref={listRef} role="listbox">
+          {results.length === 0 && <div className="palette-empty">Nothing matches “{q}”.</div>}
+          {results.map((cmd, i) => {
+            const header = cmd.group !== lastGroup ? <div className="palette-group" key={`g-${cmd.id}`}>{cmd.group}</div> : null;
+            lastGroup = cmd.group;
+            return (
+              <React.Fragment key={cmd.id}>
+                {header}
+                <button type="button" role="option" aria-selected={i === index} data-active={i === index} className={`palette-item ${i === index ? 'active' : ''}`} onMouseEnter={() => setIndex(i)} onClick={() => run(cmd)}>
+                  <span className="palette-icon"><Icon name={cmd.icon} size={15} /></span>
+                  <span className="palette-label">{cmd.label}</span>
+                  {cmd.hint && <span className="palette-hint">{cmd.hint}</span>}
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </div>
+        <div className="palette-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>Enter</kbd> open</span><span><kbd>Ctrl</kbd><kbd>K</kbd> toggle</span></div>
       </div>
-    </aside>
+    </div>
   );
 }
 
@@ -495,24 +665,34 @@ function Sidebar({ activeTab, onTabChange, supportBadge, pendingFeedbackCount, u
 // Header
 // ---------------------------------------------------------------------------
 
-function AdminHeader({ title, showSearch, query, onQueryChange, onClearQuery, onRefresh, loading }) {
+function AdminHeader({ title, group, subtitle, showSearch, query, onQueryChange, onClearQuery, onRefresh, loading, onOpenNav, onOpenPalette }) {
   return (
     <header className="admin-top">
-      <div>
-        <span className="eyebrow">ADMINISTRATION</span>
-        <h1>{title}</h1>
-        <p>One workspace for the real data connected to your MySQL database.</p>
+      <div className="admin-top-main">
+        <button type="button" className="admin-menu-btn" onClick={onOpenNav} aria-label="Open navigation">
+          <Icon name="menu" size={20} />
+        </button>
+        <div>
+          <nav className="admin-crumbs" aria-label="Breadcrumb">
+            <span>Admin</span><Icon name="chevronRight" size={11} /><span>{group}</span><Icon name="chevronRight" size={11} /><b>{title}</b>
+          </nav>
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+        </div>
       </div>
       <div className="admin-tools">
         {showSearch && (
           <div className="admin-search">
             <Icon name="search" size={15} />
-            <input value={query} onChange={(e) => onQueryChange(e.target.value)} placeholder={`Search ${title.toLowerCase()}…`} />
+            <input value={query} onChange={(e) => onQueryChange(e.target.value)} placeholder={`Filter ${title.toLowerCase()}…`} aria-label={`Filter ${title.toLowerCase()}`} />
             {query && <button onClick={onClearQuery} aria-label="Clear search">×</button>}
           </div>
         )}
+        <button type="button" className="palette-trigger" onClick={onOpenPalette}>
+          <Icon name="search" size={14} /> <span>Quick jump</span><kbd>Ctrl K</kbd>
+        </button>
         <button className="refresh-btn" onClick={onRefresh} disabled={loading}>
-          <Icon name="refresh" size={14} /> {loading ? 'Refreshing…' : 'Refresh'}
+          <Icon name="refresh" size={14} /> <span>{loading ? 'Refreshing…' : 'Refresh'}</span>
         </button>
       </div>
     </header>
@@ -1046,6 +1226,57 @@ function AnalyticsTab({ data, range, onRangeChange }) {
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
+
+function SettingsTab() {
+  const { showServicePrices, setSettings } = useSettings();
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [failure, setFailure] = useState('');
+
+  const togglePrices = async () => {
+    const next = !showServicePrices;
+    setSaving(true);
+    setNotice('');
+    setFailure('');
+    try {
+      const res = await updateSettings({ show_service_prices: next });
+      setSettings((current) => ({ ...current, ...(res.settings || { show_service_prices: next }) }));
+      setNotice(next ? 'Prices are now visible to visitors.' : 'Prices are now hidden from visitors.');
+    } catch (err) {
+      setFailure(err.message || 'Could not save the setting. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Panel title="Public website" text="Control what visitors see on the public pages.">
+      <div className="setting-row">
+        <div className="setting-copy">
+          <strong>Show service prices</strong>
+          <p>When this is off, prices are hidden on the Services page, the homepage service cards and the booking form. Prices you have entered are kept and still editable under Services.</p>
+          <span className={`setting-state ${showServicePrices ? 'on' : 'off'}`}>{showServicePrices ? 'Visible to the public' : 'Hidden from the public'}</span>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={showServicePrices}
+          aria-label="Show service prices on the public website"
+          className={`switch ${showServicePrices ? 'on' : ''}`}
+          onClick={togglePrices}
+          disabled={saving}
+        >
+          <i />
+        </button>
+      </div>
+      {notice && <div className="form-success">{notice}</div>}
+      {failure && <div className="form-error">{failure}</div>}
+      <div className="setting-links">
+        <Link to="/services" target="_blank" rel="noreferrer">Preview the Services page <Icon name="arrowUpRight" size={13} /></Link>
+      </div>
+    </Panel>
+  );
+}
 
 function Panel({ title, text, children }) {
   return (
