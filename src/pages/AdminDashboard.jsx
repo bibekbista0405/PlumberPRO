@@ -69,6 +69,13 @@ const TAB_META = {
   settings: 'Site-wide switches that change what visitors see.',
 };
 
+const BOOKING_FILTERS = {
+  all: { label: 'All', test: () => true },
+  needs: { label: 'Needs plumber', test: (b) => !b.plumber_id && ['pending', 'assigned'].includes(b.status) },
+  active: { label: 'In progress', test: (b) => ['assigned', 'confirmed', 'on_the_way', 'arrived', 'in_progress'].includes(b.status) },
+  done: { label: 'Completed', test: (b) => ['completed', 'reviewed'].includes(b.status) },
+  closed: { label: 'Cancelled', test: (b) => ['cancelled', 'rejected', 'expired'].includes(b.status) },
+};
 const BOOKING_STATUSES = [
   'pending', 'assigned', 'confirmed', 'on_the_way', 'arrived',
   'in_progress', 'completed', 'reviewed', 'cancelled', 'rejected', 'expired',
@@ -97,6 +104,7 @@ function AdminDashboard() {
 
   const [tab, setTab] = useState('overview');
   const [navOpen, setNavOpen] = useState(false);
+  const [bookingFilter, setBookingFilter] = useState('all');
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try { return window.localStorage.getItem('plumbpro:admin-collapsed') === '1'; } catch { return false; }
@@ -179,9 +187,10 @@ function AdminDashboard() {
   const filteredBookings = useMemo(() => {
     const q = query.toLowerCase();
     return bookings.filter((b) =>
-      `${b.customer_name} ${b.customer_email || ''} ${b.service_name} ${b.status} ${b.address}`.toLowerCase().includes(q)
+      BOOKING_FILTERS[bookingFilter].test(b)
+      && `${b.customer_name} ${b.customer_email || ''} ${b.service_name} ${b.status} ${b.address}`.toLowerCase().includes(q)
     );
-  }, [bookings, query]);
+  }, [bookings, query, bookingFilter]);
 
   const filteredPlumbers = useMemo(() => {
     const q = query.toLowerCase();
@@ -415,6 +424,12 @@ function AdminDashboard() {
           <div key={tab} className="admin-tab-content">
             {tab === 'overview' && (
               <OverviewTab
+                queue={[
+                  { key: 'needs', icon: 'bookings', tone: 'amber', count: bookings.filter(BOOKING_FILTERS.needs.test).length, title: 'Bookings need a plumber', text: 'Assign someone so the customer is not left waiting.', cta: 'Assign now', go: () => { setBookingFilter('needs'); switchTab('bookings'); } },
+                  { key: 'verify', icon: 'shieldCheck', tone: 'green', count: plumbers.filter((p) => !p.verified && p.status === 'active').length, title: 'Plumbers awaiting verification', text: 'Review their details and decide on the badge.', cta: 'Review', go: () => switchTab('plumbers') },
+                  { key: 'support', icon: 'message', tone: 'blue', count: supportBadge, title: 'Support items to answer', text: 'New contact messages and plumber reports.', cta: 'Open support', go: () => switchTab('support') },
+                  { key: 'feedback', icon: 'star', tone: 'purple', count: pendingFeedbackCount, title: 'Feedback to moderate', text: 'Approve or hide what users submitted.', cta: 'Moderate', go: () => switchTab('feedback') },
+                ]}
                 stats={stats}
                 bookings={bookings.slice(0, 8)}
                 plumbers={plumbers}
@@ -425,6 +440,13 @@ function AdminDashboard() {
 
             {tab === 'bookings' && (
               <Panel title="Bookings" text={`${filteredBookings.length} matching booking${filteredBookings.length === 1 ? '' : 's'}.`}>
+                <div className="admin-pills" role="group" aria-label="Filter bookings">
+                  {Object.entries(BOOKING_FILTERS).map(([key, f]) => (
+                    <button key={key} type="button" className={bookingFilter === key ? 'on' : ''} aria-pressed={bookingFilter === key} onClick={() => setBookingFilter(key)}>
+                      {f.label}<b>{bookings.filter(f.test).length}</b>
+                    </button>
+                  ))}
+                </div>
                 <BookingTable bookings={filteredBookings} plumbers={plumbers} onStatus={changeBookingStatus} />
               </Panel>
             )}
@@ -703,9 +725,25 @@ function AdminHeader({ title, group, subtitle, showSearch, query, onQueryChange,
 // Overview tab
 // ---------------------------------------------------------------------------
 
-function OverviewTab({ stats, bookings, plumbers, onStatus, onNavigate }) {
+function OverviewTab({ queue, stats, bookings, plumbers, onStatus, onNavigate }) {
+  const open = queue.filter((q) => q.count > 0);
   return (
     <>
+      <section className={`action-queue ${open.length ? '' : 'clear'}`} aria-label="Needs attention">
+        <header><h2>{open.length ? 'Needs your attention' : 'All clear'}</h2><p>{open.length ? 'The things waiting on an admin, most urgent first.' : 'Nothing is waiting on you right now.'}</p></header>
+        {open.length > 0 && (
+          <div className="action-queue-grid">
+            {open.map((q) => (
+              <button type="button" key={q.key} className={`aq-item tone-${q.tone}`} onClick={q.go}>
+                <span className="aq-icon"><Icon name={q.icon} size={18} /></span>
+                <span className="aq-body"><strong>{q.count}</strong><b>{q.title}</b><small>{q.text}</small></span>
+                <span className="aq-cta">{q.cta} <Icon name="chevronRight" size={13} /></span>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
       <div className="stat-grid">
         <StatCard label="Customers" value={stats.customers || 0} icon="users" tone="blue" />
         <StatCard label="Plumbers" value={stats.plumbers || 0} icon="briefcase" tone="accent" />

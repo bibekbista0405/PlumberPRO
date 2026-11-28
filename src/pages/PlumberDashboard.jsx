@@ -15,6 +15,7 @@ import MessagesInbox from '../components/MessagesInbox';
 import DashboardTopbar from '../components/DashboardTopbar';
 import FeedbackPrompt from '../components/FeedbackPrompt';
 import DashboardWatermark from '../components/DashboardWatermark';
+import { PortalHero, StatTile, SectionTitle, EmptyCard, Pills, WorkCard } from '../components/PortalParts';
 
 const tabs = [['overview', 'Overview', 'dashboard'], ['jobs', 'Jobs', 'briefcase'], ['messages', 'Messages', 'message'], ['profile', 'Profile', 'users']];
 
@@ -46,6 +47,13 @@ function PlumberDashboard() {
   const addCompletionPhoto = async (id, file) => { if (!file) return; setCompletionBusy(true); setError(''); try { await uploadCompletionPhoto(id, file); load() } catch (err) { setError(err.message) } finally { setCompletionBusy(false) } };
   const active = bookings.filter(b => ['confirmed', 'on_the_way', 'arrived', 'in_progress', 'assigned'].includes(b.status)).length; const completed = bookings.filter(b => b.status === 'completed' || b.status === 'reviewed').length;
   const recentJobs = bookings.slice(0, 5);
+  const needsResponse = bookings.filter(b => b.status === 'assigned').length;
+  const [chatId, setChatId] = useState(null);
+  const openChat = id => { setSelected(null); setChatId(id); setTab('messages'); loadUnread(); };
+  const NEXT = { assigned: ['confirmed', 'Accept job'], confirmed: ['on_the_way', "I'm on the way"], on_the_way: ['arrived', "I've arrived"], arrived: ['in_progress', 'Start job'], in_progress: ['completed', 'Mark complete'] };
+  const jobActions = b => { const next = NEXT[b.status]; const busy = updatingJobId !== null; return (<>{next && <button type="button" className="pt-btn solid" disabled={busy} onClick={() => update(b.id, next[0])}>{updatingJobId === b.id ? 'Updating…' : next[1]}</button>}<button type="button" className="pt-btn ghost" onClick={() => openChat(b.id)}><Icon name="message" size={13} /> Message</button>{b.status === 'assigned' && <button type="button" className="pt-btn danger" disabled={busy} onClick={() => update(b.id, 'rejected')}>Reject</button>}{['confirmed', 'on_the_way', 'arrived'].includes(b.status) && <button type="button" className="pt-btn danger" disabled={busy} onClick={() => update(b.id, 'cancelled')}>Cancel</button>}</>); };
+  const jobCard = (b, spotlight) => <WorkCard key={b.id} spotlight={spotlight} title={b.service_name} subtitle={`Job #${b.id}`} status={b.status} date={b.booking_date} time={b.booking_time} address={b.address} meta={{ icon: 'users', label: 'Customer', value: b.customer_name }} onOpen={() => setSelected(b)}>{jobActions(b)}</WorkCard>;
+  const nextJob = bookings.find(b => b.status === 'assigned') || bookings.find(b => ['confirmed', 'on_the_way', 'arrived', 'in_progress'].includes(b.status));
   const visibleJobs = bookings.filter(b => {
     const matchesStatus = jobFilter === 'all' || (jobFilter === 'active' ? ['assigned', 'confirmed', 'on_the_way', 'arrived', 'in_progress'].includes(b.status) : jobFilter === 'completed' ? ['completed', 'reviewed'].includes(b.status) : b.status === jobFilter);
     const needle = jobSearch.trim().toLowerCase();
@@ -54,35 +62,51 @@ function PlumberDashboard() {
   });
 
   return <div className="dashboard-app">
-    <DashboardTopbar roleLabel="Plumber Workspace" tabs={tabs} activeTab={tab} onTabChange={key => { setTab(key); if (key === 'messages') loadUnread(); }} unreadMessages={unreadMessages} />
+    <DashboardTopbar roleLabel="Plumber Workspace" tabs={tabs} activeTab={tab} onTabChange={key => { setTab(key); if (key === 'messages') { setChatId(null); loadUnread(); } }} unreadMessages={unreadMessages} />
     <div className={`dashboard-shell customer-dashboard plumber-dashboard ${tab === 'messages' ? 'dash-shell-full' : ''}`}>
       {tab === 'overview' && <NewAccountWelcome role="plumber" />}
       {tab === 'overview' && (
-        <div className="dashboard-header"><div><span className="eyebrow">PLUMBER WORKSPACE</span><h1>Welcome, {user?.name?.split(' ')[0]}</h1><p>Manage your profile, availability, assigned jobs and customer messages.</p></div><span className={`verification-pill ${profile?.verified ? 'verified' : 'pending'}`}>{profile?.verified && <Icon name="check" size={13} />}{profile?.verified ? 'Verified profile' : 'Pending verification'}</span></div>
+        <PortalHero
+          eyebrow="PLUMBER WORKSPACE"
+          title={`Hello, ${user?.name?.split(' ')[0] || 'there'}`}
+          subtitle={needsResponse > 0 ? `${needsResponse} new ${needsResponse === 1 ? 'job needs' : 'jobs need'} your response.` : active > 0 ? `You have ${active} active ${active === 1 ? 'job' : 'jobs'} in progress.` : 'Manage your jobs, availability and customer messages from one place.'}
+          actions={<>{needsResponse > 0 && <button type="button" className="pt-btn light" onClick={() => { setJobFilter('assigned'); setTab('jobs'); }}><Icon name="bolt" size={14} /> Review new jobs</button>}{unreadMessages > 0 && <button type="button" className="pt-btn glass" onClick={() => openChat(null)}><Icon name="message" size={14} /> {unreadMessages} unread</button>}</>}
+          badge={<span className={`verification-pill ${profile?.verified ? 'verified' : 'pending'}`}>{profile?.verified && <Icon name="check" size={13} />}{profile?.verified ? 'Verified profile' : 'Pending verification'}</span>}
+        />
       )}
       {error && <div className="form-error">{error}</div>}{message && <div className="form-success">{message}</div>}
       {tab === 'overview' && (
-        <div className="dashboard-cards"><div className="dashboard-card"><span>Assigned jobs</span><strong>{bookings.length}</strong></div><div className="dashboard-card"><span>Active jobs</span><strong>{active}</strong></div><div className="dashboard-card"><span>Completed</span><strong>{completed}</strong></div><div className="dashboard-card"><span>Rating</span><strong>{Number(profile?.rating || 0).toFixed(1)} <small><Icon name="star" size={14} filled /></small></strong></div></div>
+        <div className="pt-stats">
+          <StatTile icon="bolt" tone="copper" label="Needs response" value={needsResponse} onClick={() => { setJobFilter('assigned'); setTab('jobs'); }} />
+          <StatTile icon="wrench" tone="blue" label="Active jobs" value={active} onClick={() => { setJobFilter('active'); setTab('jobs'); }} />
+          <StatTile icon="check" tone="green" label="Completed" value={completed} onClick={() => { setJobFilter('completed'); setTab('jobs'); }} />
+          <StatTile icon="star" tone="violet" label="Rating" value={Number(profile?.rating || 0).toFixed(1)} hint={`${bookings.length} jobs assigned`} />
+        </div>
       )}
 
       {tab === 'overview' && (
         <div className="dash-section-page">
           <VerificationChecklist profile={profile} completedJobs={completed} />
           <FeedbackPrompt role="plumber" hasCompletedWork={completed > 0} />
-          <section className="booking-history"><div className="section-heading"><div><h2>Recent jobs</h2><p>Your latest assigned bookings.</p></div><button onClick={() => setTab('jobs')}>View all</button></div>{loading ? <div className="empty-state">Loading jobs…</div> : recentJobs.length === 0 ? <div className="empty-state">No jobs have been assigned to you yet.</div> : <div className="table-wrap"><table><thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>{recentJobs.map(b => <tr key={b.id}><td><strong>{b.customer_name}</strong></td><td>{b.service_name}</td><td>{new Date(b.booking_date).toLocaleDateString()}</td><td><span className={`status status-${b.status}`}>{b.status.replace('_', ' ')}</span></td><td><button className="table-btn" onClick={() => setSelected(b)}>View</button></td></tr>)}</tbody></table></div>}</section>
+          <SectionTitle title={nextJob ? 'Up next' : 'Recent jobs'} text={nextJob ? 'The job that needs your attention first.' : 'Your latest assigned bookings.'} action={<button type="button" className="pt-btn ghost" onClick={() => setTab('jobs')}>All jobs</button>} />
+          {loading ? <div className="empty-state">Loading jobs…</div> : bookings.length === 0 ? <EmptyCard icon="briefcase" title="No jobs yet" text="When the platform assigns a booking to you, it will show up here." /> : <div className="pt-grid">{(nextJob ? [nextJob, ...recentJobs.filter(b => b.id !== nextJob.id).slice(0, 3)] : recentJobs.slice(0, 4)).map((b, i) => jobCard(b, nextJob && i === 0))}</div>}
           <DashboardWatermark />
         </div>
       )}
 
       {tab === 'jobs' && (
-        <section className="booking-history dash-section-page"><div className="section-heading"><div><h2>Assigned jobs</h2><p>Only bookings assigned to your plumber account are shown here.</p></div><button onClick={() => load()} disabled={loading}><Icon name="refresh" size={13} /> {loading ? 'Refreshing…' : 'Refresh'}</button></div><div className="plumber-job-tools"><input aria-label="Search jobs" type="search" value={jobSearch} onChange={e => setJobSearch(e.target.value)} placeholder="Search customer, service, address or job #" /><div className="customer-booking-filters" role="group" aria-label="Filter jobs">{[['all','All jobs'],['active','Active'],['assigned','Needs response'],['completed','Completed'],['cancelled','Cancelled']].map(([value,label]) => <button type="button" key={value} className={jobFilter === value ? 'active' : ''} aria-pressed={jobFilter === value} onClick={() => setJobFilter(value)}>{label}</button>)}</div></div>{loading ? <div className="empty-state">Loading jobs…</div> : bookings.length === 0 ? <div className="empty-state">No jobs have been assigned to you yet.</div> : visibleJobs.length === 0 ? <div className="empty-state">No jobs match this search or filter.</div> : <div className="table-wrap"><table><thead><tr><th>Customer</th><th>Service</th><th>Date</th><th>Address</th><th>Status</th><th>Actions</th></tr></thead><tbody>{visibleJobs.map(b => <tr key={b.id}><td><strong>{b.customer_name}</strong><small className="time-line">{b.customer_email}</small></td><td>{b.service_name}</td><td>{new Date(b.booking_date).toLocaleDateString()}</td><td>{b.address}</td><td><span className={`status status-${b.status}`}>{b.status.replace('_', ' ')}</span></td><td><button className="table-btn" onClick={() => setSelected(b)}>View</button>{b.status === 'assigned' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'confirmed')}>{updatingJobId === b.id ? 'Updating…' : 'Accept'}</button>}{b.status === 'confirmed' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'on_the_way')}>On the way</button>}{b.status === 'on_the_way' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'arrived')}>Arrived</button>}{b.status === 'arrived' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'in_progress')}>Start job</button>}{b.status === 'in_progress' && <button className="table-btn" disabled={updatingJobId !== null} onClick={() => update(b.id, 'completed')}>Mark complete</button>}{b.status === 'assigned' && <button className="table-btn danger" disabled={updatingJobId !== null} onClick={() => update(b.id, 'rejected')}>Reject</button>}{['confirmed', 'on_the_way', 'arrived'].includes(b.status) && <button className="table-btn danger" disabled={updatingJobId !== null} onClick={() => update(b.id, 'cancelled')}>Cancel</button>}</td></tr>)}</tbody></table></div>}
+        <section className="dash-section-page">
+          <SectionTitle title="Assigned jobs" text="Only bookings assigned to your plumber account are shown here." action={<button type="button" className="pt-btn ghost" onClick={() => load()} disabled={loading}><Icon name="refresh" size={13} /> {loading ? 'Refreshing…' : 'Refresh'}</button>} />
+          <label className="pt-search"><Icon name="search" size={15} /><input aria-label="Search jobs" type="search" value={jobSearch} onChange={e => setJobSearch(e.target.value)} placeholder="Search customer, service, address or job #" /></label>
+          <Pills label="Filter jobs" value={jobFilter} onChange={setJobFilter} items={[['all', 'All jobs', bookings.length], ['active', 'Active'], ['assigned', 'Needs response', needsResponse], ['completed', 'Completed'], ['cancelled', 'Cancelled']]} />
+          {loading ? <div className="empty-state">Loading jobs…</div> : bookings.length === 0 ? <EmptyCard icon="briefcase" title="No jobs yet" text="When the platform assigns a booking to you, it will show up here." /> : visibleJobs.length === 0 ? <EmptyCard icon="search" title="No jobs match" text="Try another search or filter." /> : <div className="pt-grid">{visibleJobs.map(b => jobCard(b))}</div>}
         <DashboardWatermark />
         </section>
       )}
 
       {tab === 'messages' && (
         <div className="dash-section-page dash-section-fill">
-          <MessagesInbox title="Messages" emptyHint="Once you accept an assigned job, you can message the customer here." />
+          <MessagesInbox initialId={chatId} title="Messages" emptyHint="Once you accept an assigned job, you can message the customer here." />
           <DashboardWatermark thin />
         </div>
       )}

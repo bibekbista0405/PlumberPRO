@@ -19,15 +19,32 @@ function Navbar() {
   const dashboard = user?.role === 'admin' ? '/admin-dashboard' : user?.role === 'plumber' ? '/plumber-dashboard' : '/customer-dashboard';
   const close = () => setMenuOpen(false);
 
+  // One rAF-throttled scroll handler. Layout is only read when the page size
+  // changes (not on every scroll event), so scrolling never forces a reflow.
   useEffect(() => {
-    const updateScroll = () => {
-      setScrolled(window.scrollY > 12);
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      if (barRef.current) barRef.current.style.setProperty('--sp', max > 0 ? Math.min(window.scrollY / max, 1).toFixed(4) : '0');
+    let raf = 0;
+    let max = 0;
+    const measureMax = () => { max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0); };
+    const paint = () => {
+      raf = 0;
+      const y = window.scrollY;
+      setScrolled(y > 12);
+      if (barRef.current) barRef.current.style.setProperty('--sp', max > 0 ? Math.min(y / max, 1).toFixed(3) : '0');
     };
-    updateScroll();
-    window.addEventListener('scroll', updateScroll, { passive: true });
-    return () => window.removeEventListener('scroll', updateScroll);
+    const onScroll = () => { if (!raf) raf = window.requestAnimationFrame(paint); };
+    const onResize = () => { measureMax(); onScroll(); };
+    measureMax();
+    paint();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
+    if (ro) ro.observe(document.body);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    return () => {
+      if (raf) window.cancelAnimationFrame(raf);
+      if (ro) ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+    };
   }, []);
 
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
@@ -41,17 +58,19 @@ function Navbar() {
     measure();
     const t = setTimeout(measure, 350);
     window.addEventListener('resize', measure);
-    // The capsule changes width when it condenses on scroll, shifting the links.
-    const ro = typeof ResizeObserver !== 'undefined' && navRef.current ? new ResizeObserver(measure) : null;
-    if (ro) ro.observe(navRef.current);
-    return () => { clearTimeout(t); window.removeEventListener('resize', measure); if (ro) ro.disconnect(); };
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
   }, [location.pathname]);
 
+  const moveRaf = useRef(0);
   const onMove = e => {
-    const el = barRef.current; if (!el) return;
-    const r = el.getBoundingClientRect();
-    el.style.setProperty('--mx', `${e.clientX - r.left}px`);
-    el.style.setProperty('--my', `${e.clientY - r.top}px`);
+    const el = barRef.current; if (!el || moveRaf.current) return;
+    const { clientX, clientY } = e;
+    moveRaf.current = window.requestAnimationFrame(() => {
+      moveRaf.current = 0;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${clientX - r.left}px`);
+      el.style.setProperty('--my', `${clientY - r.top}px`);
+    });
   };
   const handleLogout = () => { logout(); close(); navigate('/'); };
   const active = path => (path === '/blog' ? location.pathname.startsWith('/blog') : location.pathname === path) ? 'active' : '';

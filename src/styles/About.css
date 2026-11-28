@@ -18,7 +18,7 @@
 /* ---------- hero ---------- */
 .ab-hero{position:relative;max-width:1240px;margin:0 auto;padding:84px 24px 70px;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:50px}
 .ab-hero-bg{position:absolute;inset:0;pointer-events:none;z-index:0}
-.ab-hero-bg i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;animation:abBlob 14s ease-in-out infinite}
+.ab-hero-bg i{position:absolute;border-radius:50%;-webkit-mask-image:radial-gradient(circle,#000 0,transparent 68%);mask-image:radial-gradient(circle,#000 0,transparent 68%);opacity:.55;will-change:transform;animation:abBlob 18s ease-in-out infinite}
 .ab-hero-bg i:nth-child(1){width:360px;height:360px;left:-80px;top:10%;background:color-mix(in srgb,var(--primary) 30%,transparent)}
 .ab-hero-bg i:nth-child(2){width:300px;height:300px;right:5%;top:-40px;background:color-mix(in srgb,var(--accent) 28%,transparent);animation-delay:-5s}
 .ab-hero-bg i:nth-child(3){width:260px;height:260px;right:30%;bottom:-60px;background:color-mix(in srgb,var(--primary-2) 24%,transparent);animation-delay:-9s}

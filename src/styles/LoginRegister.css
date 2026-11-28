@@ -1,6 +1,6 @@
 /* ---------- Page + shell ---------- */
 .auth-page{min-height:calc(100vh - 128px);min-height:calc(100dvh - 128px);padding:28px 18px 44px;background:var(--bg);display:grid;place-items:center;position:relative;overflow:hidden}
-.auth-page::before,.auth-page::after{content:"";position:absolute;border-radius:50%;pointer-events:none;filter:blur(70px);opacity:.5}
+.auth-page::before,.auth-page::after{content:"";position:absolute;border-radius:50%;pointer-events:none;-webkit-mask-image:radial-gradient(circle,#000 0,transparent 68%);mask-image:radial-gradient(circle,#000 0,transparent 68%);opacity:.6;will-change:transform}
 .auth-page::before{width:420px;height:420px;left:-120px;top:-100px;background:color-mix(in srgb,var(--primary) 22%,transparent);animation:authBlob 14s ease-in-out infinite}
 .auth-page::after{width:360px;height:360px;right:-100px;bottom:-120px;background:color-mix(in srgb,var(--accent) 24%,transparent);animation:authBlob 17s ease-in-out infinite reverse}
 @keyframes authBlob{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,30px) scale(1.12)}}
@@ -181,3 +181,13 @@
   .auth-pipes,.auth-showcase-body{transform:none}
   .auth-switcher-thumb,.fl>span,.fl>i,.account-type-toggle button,.type-icon,.account-type-toggle em,.auth-submit,.auth-points li{transition:none}
 }
+
+/* Refinement: calmer background so the copy reads cleanly, form centred */
+.auth-pipes{opacity:.38}
+.auth-water{height:30%;opacity:.75}
+.auth-showcase[data-mode="register"] .auth-water{height:40%}
+.auth-showcase-body{position:relative}
+.auth-showcase-body::before{content:"";position:absolute;inset:-40px -50px;z-index:-1;background:radial-gradient(ellipse at 35% 45%,rgba(5,22,20,.85),rgba(5,22,20,.5) 50%,transparent 72%)}
+.auth-card{display:flex;flex-direction:column;justify-content:center}
+.auth-card input{font-size:1rem}
+@media(max-width:560px){.auth-card{justify-content:flex-start}}

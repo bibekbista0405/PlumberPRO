@@ -41,6 +41,8 @@ const paths = {
   send: 'M4 12L20 4l-6 16-3-7-7-1Z',
   chart: 'M4 20V10|M10 20V4|M16 20v-7|M4 20h16',
   menu: 'M4 7h16|M4 12h16|M4 17h16',
+  calendar: 'M4 6h16v14H4Z|M4 10h16|M8 3v4|M16 3v4',
+  pin: 'M12 21s-6-5.6-6-10.5a6 6 0 0 1 12 0C18 15.4 12 21 12 21Z|CIRCLE:12,10.5,2.2',
   panel: 'M4 5h16v14H4Z|M9 5v14',
 };
 

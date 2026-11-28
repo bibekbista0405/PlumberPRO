@@ -17,6 +17,7 @@ import MessagesInbox from '../components/MessagesInbox';
 import DashboardTopbar from '../components/DashboardTopbar';
 import FeedbackPrompt from '../components/FeedbackPrompt';
 import DashboardWatermark from '../components/DashboardWatermark';
+import { PortalHero, StatTile, SectionTitle, EmptyCard, Pills, WorkCard } from '../components/PortalParts';
 import { useConfirm } from '../context/ConfirmContext';
 
 const tabs = [['overview', 'Overview', 'dashboard'], ['bookings', 'My bookings', 'bookings'], ['messages', 'Messages', 'message']];
@@ -48,24 +49,32 @@ function CustomerDashboard() {
   const pending = bookings.filter(b => ['pending', 'assigned', 'confirmed', 'on_the_way', 'arrived', 'in_progress'].includes(b.status)).length;
   const completed = bookings.filter(b => ['completed', 'reviewed'].includes(b.status)).length;
   const recent = bookings.slice(0, 5);
-  const openMessages = () => { setTab('messages'); loadUnread(); };
+  const [chatId, setChatId] = useState(null);
+  const openMessages = () => { setChatId(null); setTab('messages'); loadUnread(); };
+  const openChat = id => { setSelected(null); setChatId(id); setTab('messages'); loadUnread(); };
+  const nextBooking = bookings.find(b => ACTIVE_BOOKING_STATUSES.includes(b.status));
+  const bookingActions = b => (<>{b.plumber_id && <button type="button" className="pt-btn ghost" onClick={() => openChat(b.id)}>Message</button>}{['completed', 'reviewed'].includes(b.status) && b.plumber_id && !b.review_id && <button type="button" className="pt-btn solid" onClick={() => setReviewing(b)}>Rate plumber</button>}{!['in_progress', 'completed', 'reviewed', 'cancelled', 'rejected', 'expired'].includes(b.status) && <button type="button" className="pt-btn danger" onClick={() => cancel(b.id)}>Cancel</button>}</>);
+  const bookingCard = (b, spotlight) => <WorkCard key={b.id} spotlight={spotlight} title={b.service_name} subtitle={`Booking #${b.id}`} status={b.status} date={b.booking_date} time={b.booking_time} address={b.address} meta={{ icon: 'users', label: 'Plumber', value: b.plumber_name || 'Awaiting assignment' }} onOpen={() => openBooking(b)}>{bookingActions(b)}</WorkCard>;
 
   return (
     <div className="dashboard-app">
-      <DashboardTopbar roleLabel="Customer Portal" tabs={tabs} activeTab={tab} onTabChange={key => { setTab(key); if (key === 'messages') loadUnread(); }} unreadMessages={unreadMessages} />
+      <DashboardTopbar roleLabel="Customer Portal" tabs={tabs} activeTab={tab} onTabChange={key => { setTab(key); if (key === 'messages') { setChatId(null); loadUnread(); } }} unreadMessages={unreadMessages} />
       <div className={`customer-dashboard dashboard-shell ${tab === 'messages' ? 'dash-shell-full' : ''}`}>
         {tab === 'overview' && <NewAccountWelcome role="customer" />}
         {tab === 'overview' && (
-          <div className="dashboard-header">
-            <div><span className="eyebrow">CUSTOMER PORTAL</span><h1>Welcome, {user?.name?.split(' ')[0]}</h1><p>Track service requests, message your plumber and review completed work.</p></div>
-            <Link to="/book-plumber" className="dashboard-action">+ Book a Plumber</Link>
-          </div>
+          <PortalHero
+            eyebrow="CUSTOMER PORTAL"
+            title={`Welcome back, ${user?.name?.split(' ')[0] || 'there'}`}
+            subtitle={nextBooking ? `Your ${nextBooking.service_name} booking is ${nextBooking.status.replace(/_/g, ' ')}.` : 'Book a verified plumber, follow the job live and message them in one place.'}
+            actions={<><Link to="/book-plumber" className="pt-btn light"><Icon name="plus" size={14} /> Book a plumber</Link>{unreadMessages > 0 && <button type="button" className="pt-btn glass" onClick={openMessages}><Icon name="message" size={14} /> {unreadMessages} unread {unreadMessages === 1 ? 'message' : 'messages'}</button>}</>}
+          />
         )}
         {tab === 'overview' && (
-          <div className="dashboard-cards">
-            <div className="dashboard-card"><span>Total bookings</span><strong>{bookings.length}</strong></div>
-            <div className="dashboard-card"><span>Active services</span><strong>{pending}</strong></div>
-            <div className="dashboard-card"><span>Completed</span><strong>{completed}</strong></div>
+          <div className="pt-stats">
+            <StatTile icon="bookings" label="Total bookings" value={bookings.length} onClick={() => setTab('bookings')} />
+            <StatTile icon="bolt" tone="copper" label="Active services" value={pending} onClick={() => { setBookingFilter('active'); setTab('bookings'); }} />
+            <StatTile icon="check" tone="green" label="Completed" value={completed} onClick={() => { setBookingFilter('completed'); setTab('bookings'); }} />
+            <StatTile icon="message" tone="blue" label="Unread messages" value={unreadMessages} onClick={openMessages} />
           </div>
         )}
         {error && <div className="form-error">{error}</div>}
@@ -75,29 +84,36 @@ function CustomerDashboard() {
           <div className="dash-section-page">
             <DashboardPromo />
             <FeedbackPrompt role="customer" hasCompletedWork={completed > 0} />
-            <div className="booking-history">
-              <div className="section-heading"><div><h2>Recent bookings</h2><p>Your latest service requests.</p></div><button onClick={() => setTab('bookings')}>View all</button></div>
-              {loading ? <div className="empty-state">Loading bookings…</div> : recent.length === 0 ? <div className="empty-state">No bookings yet. <Link to="/book-plumber">Create your first request.</Link></div> :
-                <div className="table-wrap"><table><thead><tr><th>Service</th><th>Date</th><th>Plumber</th><th>Status</th><th>Action</th></tr></thead><tbody>
-                  {recent.map(b => <tr key={b.id}><td><strong>{b.service_name}</strong></td><td>{formatBookingDate(b.booking_date)}</td><td>{b.plumber_name || 'Awaiting assignment'}</td><td><span className={`status status-${b.status}`}>{b.status.replace('_', ' ')}</span></td><td><button className="table-btn" onClick={() => openBooking(b)}>View</button></td></tr>)}
-                </tbody></table></div>}
+            <div className="pt-two">
+              <div>
+                <SectionTitle title={nextBooking ? 'Happening now' : 'Recent bookings'} text={nextBooking ? 'Follow your active booking step by step.' : 'Your latest service requests.'} action={<button type="button" className="pt-btn ghost" onClick={() => setTab('bookings')}>View all</button>} />
+                {loading ? <div className="empty-state">Loading bookings…</div> : bookings.length === 0 ? <EmptyCard title="No bookings yet" text="Describe the problem and a verified plumber near you will take it from there." action={<Link to="/book-plumber" className="pt-btn solid">Create your first request</Link>} /> : <div className="pt-grid one">{(nextBooking ? [nextBooking, ...recent.filter(b => b.id !== nextBooking.id).slice(0, 2)] : recent.slice(0, 3)).map((b, i) => bookingCard(b, nextBooking && i === 0))}</div>}
+              </div>
+              <aside className="pt-panel">
+                <SectionTitle title="Quick actions" />
+                <div className="pt-quick">
+                  <Link to="/book-plumber"><span className="i"><Icon name="plus" size={16} /></span><span>Book a plumber<small>Pick a service and a time</small></span></Link>
+                  <button type="button" onClick={openMessages}><span className="i"><Icon name="message" size={16} /></span><span>Open messages<small>Chat with your plumber</small></span>{unreadMessages > 0 && <em>{unreadMessages}</em>}</button>
+                  <button type="button" onClick={() => setTab('bookings')}><span className="i"><Icon name="bookings" size={16} /></span><span>All bookings<small>History, ratings and cancellations</small></span></button>
+                </div>
+              </aside>
             </div>
             <DashboardWatermark />
           </div>
         )}
 
         {tab === 'bookings' && (
-          <div id="bookings" className="booking-history dash-section-page">
-            <div className="section-heading"><div><h2>My bookings</h2><p>Track every request, appointment and completed service.</p></div><button onClick={() => load()}><Icon name="refresh" size={13} /> Refresh</button></div>
-            <div className="customer-booking-filters" role="group" aria-label="Filter bookings">{bookingFilters.map(([key, label]) => <button key={key} type="button" className={bookingFilter === key ? 'active' : ''} aria-pressed={bookingFilter === key} onClick={() => setBookingFilter(key)}>{label}{key === 'all' ? ` (${bookings.length})` : key === 'active' ? ` (${bookings.filter(b => ACTIVE_BOOKING_STATUSES.includes(b.status)).length})` : ''}</button>)}</div>
-            {loading ? <div className="empty-state">Loading bookings…</div> : bookings.length === 0 ? <div className="empty-state">No bookings yet. <Link to="/book-plumber">Create your first request.</Link></div> : visibleBookings.length === 0 ? <div className="empty-state">No {bookingFilter} bookings found. Try another filter.</div> : <div className="table-wrap"><table><thead><tr><th>Service</th><th>Date</th><th>Address</th><th>Plumber</th><th>Status</th><th>Action</th></tr></thead><tbody>{visibleBookings.map(b => <tr key={b.id}><td><strong>{b.service_name}</strong></td><td>{formatBookingDate(b.booking_date)}<small className="time-line">{String(b.booking_time).slice(0, 5)}</small></td><td>{b.address}</td><td>{b.plumber_name || 'Awaiting assignment'}</td><td><span className={`status status-${b.status}`}>{b.status.replace('_', ' ')}</span></td><td><button className="table-btn" onClick={() => openBooking(b)}>View</button>{['completed', 'reviewed'].includes(b.status) && b.plumber_id && !b.review_id && <button className="table-btn" onClick={() => setReviewing(b)}>Rate</button>}{!['in_progress', 'completed', 'reviewed', 'cancelled', 'rejected', 'expired'].includes(b.status) && <button className="table-btn danger" onClick={() => cancel(b.id)}>Cancel</button>}</td></tr>)}</tbody></table></div>}
+          <div id="bookings" className="dash-section-page">
+            <SectionTitle title="My bookings" text="Track every request, appointment and completed service." action={<button type="button" className="pt-btn ghost" onClick={() => load()}><Icon name="refresh" size={13} /> Refresh</button>} />
+            <Pills label="Filter bookings" value={bookingFilter} onChange={setBookingFilter} items={bookingFilters.map(([key, label]) => [key, label, key === 'all' ? bookings.length : key === 'active' ? bookings.filter(b => ACTIVE_BOOKING_STATUSES.includes(b.status)).length : undefined])} />
+            {loading ? <div className="empty-state">Loading bookings…</div> : bookings.length === 0 ? <EmptyCard title="No bookings yet" text="Your requests will appear here once you make one." action={<Link to="/book-plumber" className="pt-btn solid">Create your first request</Link>} /> : visibleBookings.length === 0 ? <EmptyCard icon="search" title={`No ${bookingFilter} bookings`} text="Try another filter." /> : <div className="pt-grid">{visibleBookings.map(b => bookingCard(b))}</div>}
             <DashboardWatermark />
           </div>
         )}
 
         {tab === 'messages' && (
           <div className="dash-section-page dash-section-fill">
-            <MessagesInbox title="Messages" emptyHint="Once a plumber is assigned to one of your bookings, you can message them here." />
+            <MessagesInbox initialId={chatId} title="Messages" emptyHint="Once a plumber is assigned to one of your bookings, you can message them here." />
             <DashboardWatermark thin />
           </div>
         )}
